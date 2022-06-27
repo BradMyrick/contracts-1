@@ -1,0 +1,94 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "txHash": "0x946c8e8c181ba989d3059bd73ac3cb5ef1263d53375d2057c037fff97d3fb7dc"
+  },
+  "proxies": [
+    {
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      "txHash": "0x3597b5465c87f1a05339a64c2ba2a066c723407df86f598e828b29a9bbfc815b",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "62a7f98af99f6fbd30003fda58cd52aa7e831867c75a96a8c0c8b53ea1ba9a9a": {
+      "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "txHash": "0x200d3efb898dbeb4b39ef07a30a67850ef2058dce9abb605f6283c5e252ce99b",
+      "layout": {
+        "storage": [
+          {
+            "label": "lock",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "PaymentRecieved",
+            "src": "contracts\\PaymentRecieved.sol:11"
+          },
+          {
+            "label": "owner",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_address_payable",
+            "contract": "PaymentRecieved",
+            "src": "contracts\\PaymentRecieved.sol:13"
+          },
+          {
+            "label": "Authorized",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_bool))",
+            "contract": "PaymentRecieved",
+            "src": "contracts\\PaymentRecieved.sol:15"
+          },
+          {
+            "label": "Prices",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_uint256,t_uint256)",
+            "contract": "PaymentRecieved",
+            "src": "contracts\\PaymentRecieved.sol:17"
+          },
+          {
+            "label": "increment",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "PaymentRecieved",
+            "src": "contracts\\PaymentRecieved.sol:19"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_address_payable": {
+            "label": "address payable",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_bool))": {
+            "label": "mapping(address => mapping(address => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        }
+      }
+    }
+  }
+}
