@@ -1,8 +1,8 @@
-# Basic Sample Hardhat Project
+# Testing for Upgradeable Smart Contracts
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
+This test set utilizes the OpenZeppelin `Upgradeable` contract standards to test if the contract is upgradeable and then deploys it.
 
-Try running some of the following tasks:
+tasks:
 
 ```shell
 npx hardhat accounts
@@ -13,3 +13,4 @@ npx hardhat node
 node scripts/sample-script.js
 npx hardhat help
 ```
+TODO: add special dependencies for the project
