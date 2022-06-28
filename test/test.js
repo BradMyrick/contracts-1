@@ -42,14 +42,14 @@ describe("PaymentRecieved contract", function () {
 
   describe("Add Price", function () {
     it("Should add payment if owner", async function () {
-      await paymentRecieved.addPrice(25);
+      await paymentRecieved.addPrice(25, "test price");
       let index = await paymentRecieved.increment();
       index -= 1;
       expect(await paymentRecieved.Prices(index)).to.equal(25);
     }
     );
     it("Should revert if not owner", async function () {
-      await expect(paymentRecieved.addPrice(25, {from: addr1})).to.be.reverted;
+      await expect(paymentRecieved.connect(addr1).addPrice(25, "test price")).to.be.reverted;
     }
     );
   });
@@ -57,22 +57,15 @@ describe("PaymentRecieved contract", function () {
   describe("Withdraw", function () {
     it("Balance should equal to the value sent", async function () {
       // send ether to contract
-      const address = await paymentRecieved.address;
-      await owner.sendTransaction({
-        to: address,
-        value: ethers.utils.parseEther("1"),
-        gasLimit: 200000
-      });
+      await paymentRecieved.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+
       expect(await ethers.provider.getBalance(paymentRecieved.address)).to.equal(ethers.utils.parseEther("1"));
     }
     );
     it("Should withdraw if owner", async function () {
       const address = await paymentRecieved.address;
-      await owner.sendTransaction({
-        to: address,
-        value: ethers.utils.parseEther("1"),
-        gasLimit: 200000
-      });
+      await paymentRecieved.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+
       const oldAmount = await ethers.provider.getBalance(owner.address);
       await paymentRecieved.connect(owner).withdraw();
       const newAmount = await ethers.provider.getBalance(owner.address);
@@ -81,14 +74,42 @@ describe("PaymentRecieved contract", function () {
     );
     it("Shouldn't withdraw if not owner", async function () {
       const address = await paymentRecieved.address;
-      await addr1.sendTransaction({
-        to: address,
-        value: ethers.utils.parseEther("1"),
-        gasLimit: 200000
-      });
+      await paymentRecieved.connect(addr1).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+
       // should revert if not owner
       await expect(paymentRecieved.connect(addr1).withdraw()).to.be.revertedWith("Only the owner can perform this action");
+    });
+  });
+
+  describe("UnLock", function () {
+    it("Should unlock if owner", async function () {
+      await paymentRecieved.connect(owner).unlock();
+      expect(await paymentRecieved.lock()).to.equal(false);
     }
     );
+    it("Shouldn't unlock if not owner", async function () {
+      await expect(paymentRecieved.connect(addr1).unlock()).to.be.revertedWith("Only the owner can perform this action");
+    });
   });
+
+  describe("authorize", function () {
+    it("Should authorize if owner", async function () {
+      await paymentRecieved.connect(owner).addPrice(ethers.utils.parseEther("1"), "test price");
+      await paymentRecieved.connect(addr1).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+      expect(await paymentRecieved.Authorized(addr1.address, addr2.address)).to.equal(true);
+    }
+    );
+    it("Shouldn't authorize if price not met", async function () {
+      await paymentRecieved.connect(owner).addPrice(ethers.utils.parseEther("1"), "test price");
+      await expect (paymentRecieved.connect(addr1).authorize(1, addr2.address)).to.be.revertedWith("Not enough Avax sent");
+    }
+    );
+    it("Shouldn't authorize if the owner is already authorized", async function () {
+      await paymentRecieved.connect(owner).addPrice(ethers.utils.parseEther("1"), "test price");
+      await paymentRecieved.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+      await expect (paymentRecieved.connect(owner).authorize(1, addr2.address)).to.be.revertedWith("Already authorized");
+    }
+    );
+  }
+  );
 });

@@ -2,19 +2,19 @@
   "manifestVersion": "3.2",
   "admin": {
     "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-    "txHash": "0x946c8e8c181ba989d3059bd73ac3cb5ef1263d53375d2057c037fff97d3fb7dc"
+    "txHash": "0x3d7efcbfdd5cc834892cbe142f62f782c363e2a401d012e20a084166ee18bcb0"
   },
   "proxies": [
     {
       "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-      "txHash": "0x3597b5465c87f1a05339a64c2ba2a066c723407df86f598e828b29a9bbfc815b",
+      "txHash": "0x27ff143aa0cf57677d41549db7ee3791f307f270e6048a498f9d7603248a7d9f",
       "kind": "transparent"
     }
   ],
   "impls": {
-    "62a7f98af99f6fbd30003fda58cd52aa7e831867c75a96a8c0c8b53ea1ba9a9a": {
+    "c6a37615699a7174b37b324f3734cde50c9da0b85bc7a21f3d138828af134e73": {
       "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-      "txHash": "0x200d3efb898dbeb4b39ef07a30a67850ef2058dce9abb605f6283c5e252ce99b",
+      "txHash": "0x96674ed04e121a86f07aca7b506c3c4e2e47b63fa81556bace3bffa9887aac1a",
       "layout": {
         "storage": [
           {
@@ -50,12 +50,20 @@
             "src": "contracts\\PaymentRecieved.sol:17"
           },
           {
-            "label": "increment",
+            "label": "Services",
             "offset": 0,
             "slot": "3",
-            "type": "t_uint256",
+            "type": "t_mapping(t_uint256,t_string_storage)",
             "contract": "PaymentRecieved",
             "src": "contracts\\PaymentRecieved.sol:19"
+          },
+          {
+            "label": "increment",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "PaymentRecieved",
+            "src": "contracts\\PaymentRecieved.sol:21"
           }
         ],
         "types": {
@@ -79,8 +87,16 @@
             "label": "mapping(address => mapping(address => bool))",
             "numberOfBytes": "32"
           },
+          "t_mapping(t_uint256,t_string_storage)": {
+            "label": "mapping(uint256 => string)",
+            "numberOfBytes": "32"
+          },
           "t_mapping(t_uint256,t_uint256)": {
             "label": "mapping(uint256 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
             "numberOfBytes": "32"
           },
           "t_uint256": {

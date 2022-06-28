@@ -16,16 +16,16 @@ contract PaymentRecieved {
     
     mapping(uint256 => uint256) public Prices;
 
+    mapping(uint256 => string) public Services;
+
     uint256 public increment;
 
     event AuthorizedEvent(address indexed sender, address indexed nftContract);    
 
+
     modifier onlyOwner {
         require(msg.sender == owner, "Only the owner can perform this action");
         _;
-    }
-    fallback() external payable {
-        // Do nothing
     }
 
     function initialize() public {
@@ -33,7 +33,8 @@ contract PaymentRecieved {
         lock = false;
         owner = payable(msg.sender);
     }
-    function addPrice(uint256 _price) external onlyOwner {
+    function addPrice(uint256 _price, string memory _service) external onlyOwner {
+        Services[increment] = _service;
         Prices[increment] = _price;
         increment++;
     }
@@ -42,8 +43,9 @@ contract PaymentRecieved {
     }
 
     function authorize(uint256 _service, address _contract) external payable returns(bool _success) {
-        require(!lock);
+        require(!lock, "The contract is locked, contact the owner to unlock it");
         require(_contract != address(0), "PaymentRecieved: INVALID_ADDRESS");
+        require(!Authorized[msg.sender][_contract], "Already authorized");
         lock = true;
         require(msg.value >= Prices[_service], "Not enough Avax sent");
         Authorized[msg.sender][_contract] = true;
