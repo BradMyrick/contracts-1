@@ -12,10 +12,6 @@ describe("PaymentRecieved contract", function () {
     // Get the ContractFactory and Signers here.
     PaymentRecieved = await ethers.getContractFactory("PaymentRecieved");
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
-
-    // To deploy our contract, we just have to call Token.deploy() and await
-    // for it to be deployed(), which happens once its transaction has been
-    // mined.
     paymentRecieved = await PaymentRecieved.deploy();
     await paymentRecieved.initialize();
   });
