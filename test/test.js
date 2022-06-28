@@ -73,12 +73,21 @@ describe("PaymentRecieved contract", function () {
     }
     );
     it("Shouldn't withdraw if not owner", async function () {
-      const address = await paymentRecieved.address;
       await paymentRecieved.connect(addr1).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
 
       // should revert if not owner
       await expect(paymentRecieved.connect(addr1).withdraw()).to.be.revertedWith("Only the owner can perform this action");
     });
+    // check emitted event
+    it("Should emit event when withdraw", async function () {
+      await paymentRecieved.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+      expect(await paymentRecieved.connect(owner).withdraw()).to.emit(paymentRecieved, "Withdraw");    
+    }
+    );
+    it("Should revert if no balance", async function () {
+      await expect(paymentRecieved.connect(owner).withdraw()).to.be.revertedWith("No funds to withdraw");
+    }
+    );
   });
 
   describe("UnLock", function () {

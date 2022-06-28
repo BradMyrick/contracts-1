@@ -20,7 +20,8 @@ contract PaymentRecieved {
 
     uint256 public increment;
 
-    event AuthorizedEvent(address indexed sender, address indexed nftContract);    
+    event AuthorizedEvent(address indexed sender, address indexed nftContract);
+    event Withdraw(uint256 indexed amount);
 
 
     modifier onlyOwner {
@@ -60,8 +61,10 @@ contract PaymentRecieved {
 
     function withdraw() external onlyOwner {
         require(!lock);
+        require(address(this).balance > 0, "No funds to withdraw");
         lock = true;
         owner.transfer(address(this).balance);
+        emit Withdraw(address(this).balance);
         lock = false;
     }
 }
