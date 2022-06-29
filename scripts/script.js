@@ -2,10 +2,10 @@
 const { ethers, upgrades } = require("hardhat");
 
 async function main() {
-  const PaymentRecieved = await ethers.getContractFactory("PaymentRecieved");
-  const paymentRecieved = await upgrades.deployProxy(PaymentRecieved);
-  await paymentRecieved.deployed();
-  console.log("Payment Contract deployed to:", paymentRecieved.address);
+  const PaymentReceived = await ethers.getContractFactory("PaymentReceived");
+  const paymentReceived = await upgrades.deployProxy(PaymentReceived);
+  await paymentReceived.deployed();
+  console.log("Payment Contract deployed to:", paymentReceived.address);
 }
 
 main();

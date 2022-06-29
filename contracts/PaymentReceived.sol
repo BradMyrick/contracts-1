@@ -7,7 +7,7 @@ pragma solidity ^0.8.7;
  */
 
 
-contract PaymentRecieved {
+contract PaymentReceived {
     bool public lock;
 
     address payable public owner;
@@ -45,7 +45,7 @@ contract PaymentRecieved {
 
     function authorize(uint256 _service, address _contract) external payable returns(bool _success) {
         require(!lock, "The contract is locked, contact the owner to unlock it");
-        require(_contract != address(0), "PaymentRecieved: INVALID_ADDRESS");
+        require(_contract != address(0), "PaymentReceived: INVALID_ADDRESS");
         require(!Authorized[msg.sender][_contract], "Already authorized");
         lock = true;
         require(msg.value >= Prices[_service], "Not enough Avax sent");

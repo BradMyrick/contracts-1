@@ -1,8 +1,8 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-describe("PaymentRecieved contract", function () {
-  let PaymentRecieved;
-  let paymentRecieved;
+describe("PaymentReceived contract", function () {
+  let PaymentReceived;
+  let paymentReceived;
   let owner;
   let addr1;
   let addr2;
@@ -10,42 +10,42 @@ describe("PaymentRecieved contract", function () {
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
-    PaymentRecieved = await ethers.getContractFactory("PaymentRecieved");
+    PaymentReceived = await ethers.getContractFactory("PaymentReceived");
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
-    paymentRecieved = await PaymentRecieved.deploy();
-    await paymentRecieved.initialize();
+    paymentReceived = await PaymentReceived.deploy();
+    await paymentReceived.initialize();
   });
 
   describe("Deployment", function () {
     it("Should set the right owner", async function () {
-      expect(await paymentRecieved.owner()).to.equal(owner.address);
+      expect(await paymentReceived.owner()).to.equal(owner.address);
     });
   } 
   );
 
   describe("Authorized", function () {
     it("Should return false for 0 address", async function () {
-      expect(await paymentRecieved.Authorized(ethers.constants.AddressZero, ethers.constants.AddressZero)).to.equal(false);    
+      expect(await paymentReceived.Authorized(ethers.constants.AddressZero, ethers.constants.AddressZero)).to.equal(false);    
     });
     it("Should return true if address is authorized", async function () {
-      await paymentRecieved.authorize(2, addr2.address); // payment amount for 2 must be 0
-      expect(await paymentRecieved.Authorized(owner.address, addr2.address)).to.equal(true);
+      await paymentReceived.authorize(2, addr2.address); // payment amount for 2 must be 0
+      expect(await paymentReceived.Authorized(owner.address, addr2.address)).to.equal(true);
     });
     it("Should return false if address is not authorized", async function () {
-      expect(await paymentRecieved.Authorized(addr1.address, addr2.address)).to.equal(false);
+      expect(await paymentReceived.Authorized(addr1.address, addr2.address)).to.equal(false);
     });
   });
 
   describe("Add Price", function () {
     it("Should add payment if owner", async function () {
-      await paymentRecieved.addPrice(25, "test price");
-      let index = await paymentRecieved.increment();
+      await paymentReceived.addPrice(25, "test price");
+      let index = await paymentReceived.increment();
       index -= 1;
-      expect(await paymentRecieved.Prices(index)).to.equal(25);
+      expect(await paymentReceived.Prices(index)).to.equal(25);
     }
     );
     it("Should revert if not owner", async function () {
-      await expect(paymentRecieved.connect(addr1).addPrice(25, "test price")).to.be.reverted;
+      await expect(paymentReceived.connect(addr1).addPrice(25, "test price")).to.be.reverted;
     }
     );
   });
@@ -53,66 +53,66 @@ describe("PaymentRecieved contract", function () {
   describe("Withdraw", function () {
     it("Balance should equal to the value sent", async function () {
       // send ether to contract
-      await paymentRecieved.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+      await paymentReceived.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
 
-      expect(await ethers.provider.getBalance(paymentRecieved.address)).to.equal(ethers.utils.parseEther("1"));
+      expect(await ethers.provider.getBalance(paymentReceived.address)).to.equal(ethers.utils.parseEther("1"));
     }
     );
     it("Should withdraw if owner", async function () {
-      const address = await paymentRecieved.address;
-      await paymentRecieved.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+      const address = await paymentReceived.address;
+      await paymentReceived.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
 
       const oldAmount = await ethers.provider.getBalance(owner.address);
-      await paymentRecieved.connect(owner).withdraw();
+      await paymentReceived.connect(owner).withdraw();
       const newAmount = await ethers.provider.getBalance(owner.address);
       expect(newAmount).to.above(oldAmount);
     }
     );
     it("Shouldn't withdraw if not owner", async function () {
-      await paymentRecieved.connect(addr1).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+      await paymentReceived.connect(addr1).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
 
       // should revert if not owner
-      await expect(paymentRecieved.connect(addr1).withdraw()).to.be.revertedWith("Only the owner can perform this action");
+      await expect(paymentReceived.connect(addr1).withdraw()).to.be.revertedWith("Only the owner can perform this action");
     });
     // check emitted event
     it("Should emit event when withdraw", async function () {
-      await paymentRecieved.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
-      expect(await paymentRecieved.connect(owner).withdraw()).to.emit(paymentRecieved, "Withdraw");    
+      await paymentReceived.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+      expect(await paymentReceived.connect(owner).withdraw()).to.emit(paymentReceived, "Withdraw");    
     }
     );
     it("Should revert if no balance", async function () {
-      await expect(paymentRecieved.connect(owner).withdraw()).to.be.revertedWith("No funds to withdraw");
+      await expect(paymentReceived.connect(owner).withdraw()).to.be.revertedWith("No funds to withdraw");
     }
     );
   });
 
   describe("UnLock", function () {
     it("Should unlock if owner", async function () {
-      await paymentRecieved.connect(owner).unlock();
-      expect(await paymentRecieved.lock()).to.equal(false);
+      await paymentReceived.connect(owner).unlock();
+      expect(await paymentReceived.lock()).to.equal(false);
     }
     );
     it("Shouldn't unlock if not owner", async function () {
-      await expect(paymentRecieved.connect(addr1).unlock()).to.be.revertedWith("Only the owner can perform this action");
+      await expect(paymentReceived.connect(addr1).unlock()).to.be.revertedWith("Only the owner can perform this action");
     });
   });
 
   describe("authorize", function () {
     it("Should authorize if owner", async function () {
-      await paymentRecieved.connect(owner).addPrice(ethers.utils.parseEther("1"), "test price");
-      await paymentRecieved.connect(addr1).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
-      expect(await paymentRecieved.Authorized(addr1.address, addr2.address)).to.equal(true);
+      await paymentReceived.connect(owner).addPrice(ethers.utils.parseEther("1"), "test price");
+      await paymentReceived.connect(addr1).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+      expect(await paymentReceived.Authorized(addr1.address, addr2.address)).to.equal(true);
     }
     );
     it("Shouldn't authorize if price not met", async function () {
-      await paymentRecieved.connect(owner).addPrice(ethers.utils.parseEther("1"), "test price");
-      await expect (paymentRecieved.connect(addr1).authorize(1, addr2.address)).to.be.revertedWith("Not enough Avax sent");
+      await paymentReceived.connect(owner).addPrice(ethers.utils.parseEther("1"), "test price");
+      await expect (paymentReceived.connect(addr1).authorize(1, addr2.address)).to.be.revertedWith("Not enough Avax sent");
     }
     );
     it("Shouldn't authorize if the owner is already authorized", async function () {
-      await paymentRecieved.connect(owner).addPrice(ethers.utils.parseEther("1"), "test price");
-      await paymentRecieved.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
-      await expect (paymentRecieved.connect(owner).authorize(1, addr2.address)).to.be.revertedWith("Already authorized");
+      await paymentReceived.connect(owner).addPrice(ethers.utils.parseEther("1"), "test price");
+      await paymentReceived.connect(owner).authorize(1, addr2.address, {value: ethers.utils.parseEther("1")});
+      await expect (paymentReceived.connect(owner).authorize(1, addr2.address)).to.be.revertedWith("Already authorized");
     }
     );
   }
