@@ -82,7 +82,7 @@ contract Entity721a is ERC721A, Ownable, ReentrancyGuard {
     /// @dev disable mint permanently
     // todo: switch to deadman switch, not permanently disabled this way for testing purposes
     function disableMint() external onlyOwner {
-        mintLive = !mintLive;
+        mintLive = false;
     }
 
     /// @dev burn a token
