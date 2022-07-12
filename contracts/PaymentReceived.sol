@@ -2,8 +2,8 @@
 pragma solidity ^0.8.7;
 
 /**
- * @title Assembler Payment Contract
- * @notice Recieves AVAX from a creator and authorizes the NFT reveal to that user.
+ * @title Receive Payment Contract
+ * @notice Recieves AVAX from a creator and authorizes that user.
  */
 
 
