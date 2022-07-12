@@ -74,6 +74,8 @@ contract Entity721a is ERC721A, Ownable, ReentrancyGuard {
 
     /// @dev override the tokenURI function in ERC721A
     function tokenURI(uint256 _tokenId) override public view returns (string memory) {
+        // require the token to exist
+        require(_exists(_tokenId), "Token does not exist");
         return tokenURIs[_tokenId];
     }
 
@@ -81,6 +83,12 @@ contract Entity721a is ERC721A, Ownable, ReentrancyGuard {
     // todo: switch to deadman switch, not permanently disabled this way for testing purposes
     function disableMint() external onlyOwner {
         mintLive = !mintLive;
+    }
+
+    /// @dev burn a token
+    function burn(uint256 _tokenId) external onlyTokenOwner(_tokenId) nonReentrant {
+        require(_exists(_tokenId), "Token does not exist");
+        _burn(_tokenId);
     }
 
 }
