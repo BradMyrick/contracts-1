@@ -1,8 +1,11 @@
 const { expect } = require("chai");
+const { parseEther } = require("ethers/lib/utils");
 const { ethers } = require("hardhat");
 describe("PaymentReceived contract", function () {
   let PaymentReceived;
   let paymentReceived;
+  let Erc20;
+  let erc20;
   let owner;
   let addr1;
   let addr2;
@@ -10,10 +13,12 @@ describe("PaymentReceived contract", function () {
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
+    Erc20 = await ethers.getContractFactory("Recharge");
+    erc20 = await Erc20.deploy();
     PaymentReceived = await ethers.getContractFactory("PaymentReceived");
     [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
-    paymentReceived = await PaymentReceived.deploy();
-    await paymentReceived.initialize();
+    paymentReceived = await PaymentReceived.deploy(erc20.address, parseEther("1"), addr1.address);
+    await paymentReceived.deployed();
   });
 
   describe("Deployment", function () {

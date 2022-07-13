@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 /**
- * @title Receive Payment Contract
- * @notice Recieves AVAX from a creator and authorizes that user.
+ * @title  Payment Recieved Contract
+ * @notice Recieves RXG erc20 from a creator and authorizes that user on the contract specified.
+ * @author BradMyrick @kodr_eth
  */
 
-
-contract PaymentReceived {
-    bool public lock;
-
-    address payable public owner;
-
+contract PaymentReceived is ReentrancyGuard {
+    IERC20 public paymentToken;
+    uint256 public assemblerPrice;
+    address public multiSigWallet;
+    address public owner;
+    /// @dev mapping from Callers address to their nft contract address and a paid bool.
     mapping(address => mapping(address => bool)) public Authorized;
-    
-    mapping(uint256 => uint256) public Prices;
-
-    mapping(uint256 => string) public Services;
-
-    uint256 public increment;
 
     event AuthorizedEvent(address indexed sender, address indexed nftContract);
     event Withdraw(uint256 indexed amount);
@@ -29,42 +28,28 @@ contract PaymentReceived {
         _;
     }
 
-    function initialize() public {
-        increment = 1;
-        lock = false;
+    modifier onlyNftCreator(address nftContract) {
+        require(msg.sender == Ownable(nftContract).owner(), "Only the collection creator can perform this action");
+        _;
+    }
+
+    constructor(address _rxg, uint256 _amount, address _multiSigWallet) {
+        paymentToken = IERC20(_rxg);
         owner = payable(msg.sender);
-    }
-    function addPrice(uint256 _price, string memory _service) external onlyOwner {
-        Services[increment] = _service;
-        Prices[increment] = _price;
-        increment++;
-    }
-    function changePrice(uint256 _index, uint256 _price) external onlyOwner {
-        Prices[_index] = _price;
+        multiSigWallet = _multiSigWallet;
+        assemblerPrice = _amount;
     }
 
-    function authorize(uint256 _service, address _contract) external payable returns(bool _success) {
-        require(!lock, "The contract is locked, contact the owner to unlock it");
+    function changePrice(uint256 _price) external onlyOwner {
+        assemblerPrice = _price;
+    }
+
+    function authorize(address _contract) external nonReentrant onlyNftCreator(_contract) returns(bool _success) {
         require(_contract != address(0), "PaymentReceived: INVALID_ADDRESS");
+        require(paymentToken.allowance(msg.sender, multiSigWallet) >= assemblerPrice, "PaymentReceived: INSUFFICIENT_TOKEN_ALLOWANCE");
         require(!Authorized[msg.sender][_contract], "Already authorized");
-        lock = true;
-        require(msg.value >= Prices[_service], "Not enough Avax sent");
-        Authorized[msg.sender][_contract] = true;
         emit AuthorizedEvent(msg.sender, _contract);
-        lock = false;
-        return true;
-    }
-
-    function unlock() external onlyOwner {
-        lock = false;
-    }
-
-    function withdraw() external onlyOwner {
-        require(!lock);
-        require(address(this).balance > 0, "No funds to withdraw");
-        lock = true;
-        owner.transfer(address(this).balance);
-        emit Withdraw(address(this).balance);
-        lock = false;
+        Authorized[msg.sender][_contract] = true;
+        return(paymentToken.transfer(multiSigWallet, assemblerPrice));
     }
 }
