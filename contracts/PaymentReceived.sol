@@ -44,12 +44,13 @@ contract PaymentReceived is ReentrancyGuard {
         assemblerPrice = _price;
     }
 
-    function authorize(address _contract) external nonReentrant onlyNftCreator(_contract) returns(bool _success) {
+    // todo: add onlyNftCreator(_contract) to this function. removed for testing.
+    function authorize(address _contract) external nonReentrant  returns(bool _success) {
         require(_contract != address(0), "PaymentReceived: INVALID_ADDRESS");
-        require(paymentToken.allowance(msg.sender, multiSigWallet) >= assemblerPrice, "PaymentReceived: INSUFFICIENT_TOKEN_ALLOWANCE");
+        require(paymentToken.allowance(msg.sender, address(this)) >= assemblerPrice, "PaymentReceived: INSUFFICIENT_TOKEN_ALLOWANCE");
         require(!Authorized[msg.sender][_contract], "Already authorized");
         emit AuthorizedEvent(msg.sender, _contract);
         Authorized[msg.sender][_contract] = true;
-        return(paymentToken.transfer(multiSigWallet, assemblerPrice));
+        return(paymentToken.transferFrom(msg.sender, multiSigWallet, assemblerPrice));
     }
 }
