@@ -22,30 +22,35 @@ contract PaymentReceived is ReentrancyGuard {
     event AuthorizedEvent(address indexed sender, address indexed nftContract);
     event Withdraw(uint256 indexed amount);
 
-
+    /// @dev only the owner can call functions with this modifier.
     modifier onlyOwner {
         require(msg.sender == owner, "Only the owner can perform this action");
         _;
     }
-
+    /// @dev modifier to restrict to only the NFT project owner.
     modifier onlyNftCreator(address nftContract) {
         require(msg.sender == Ownable(nftContract).owner(), "Only the collection creator can perform this action");
         _;
     }
-
+    /// @dev constructor arguments address of erc20 contract, price in erc20 wei, and address of multisig wallet.
     constructor(address _rxg, uint256 _amount, address _multiSigWallet) {
         paymentToken = IERC20(_rxg);
         owner = payable(msg.sender);
         multiSigWallet = _multiSigWallet;
         assemblerPrice = _amount;
     }
-
+    /// @dev function to change the price of the assembler in wei of the erc20 token.
     function changePrice(uint256 _price) external onlyOwner {
         assemblerPrice = _price;
     }
 
-    // todo: add onlyNftCreator(_contract) to this function. removed for testing.
-    function authorize(address _contract) external nonReentrant  returns(bool _success) {
+    /// @dev function to change payment token.
+    function changePaymentToken(address _token) external onlyOwner {
+        paymentToken = IERC20(_token);
+    }
+
+    /// @dev function to authorize a user to use the contract.
+    function authorize(address _contract) external nonReentrant onlyNftCreator(_contract)  returns(bool _success) {
         require(_contract != address(0), "PaymentReceived: INVALID_ADDRESS");
         require(paymentToken.allowance(msg.sender, address(this)) >= assemblerPrice, "PaymentReceived: INSUFFICIENT_TOKEN_ALLOWANCE");
         require(!Authorized[msg.sender][_contract], "Already authorized");
