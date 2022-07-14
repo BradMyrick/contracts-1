@@ -28,4 +28,37 @@ describe("Tacvue721a contract", function () {
         });
     } 
     );
-});
+
+    describe("Mint", function () {
+        it("Should mint a new token if public sale IS active and Price is paid", async function () {
+            await tacvue721a.connect(owner).saleActiveSwitch();
+            expect(await tacvue721a.saleActive()).to.equal(true);
+            await tacvue721a.connect(addr1).mint(1, {value: ethers.utils.parseEther("1")});
+                expect(await tacvue721a.balanceOf(addr1.address)).to.equal(1);
+        } 
+        );
+        it("Should revert if sale is NOT active", async function () {
+            expect(await tacvue721a.saleActive()).to.equal(false);
+            await(expect(tacvue721a.connect(addr1).mint(1, {value: ethers.utils.parseEther("1")}))).to.be.reverted;
+            }
+        );
+        it("Should revert if the minter is NOT WhiteListed and WL is active", async function () {
+            await tacvue721a.connect(owner).wlActiveSwitch();
+            expect(await tacvue721a.wlActive()).to.equal(true);
+            expect(await tacvue721a.WhiteList(addr1.address)).to.equal(false);
+            await expect(tacvue721a.connect(addr1).mint(1, {value: ethers.utils.parseEther("1")})).to.be.reverted;
+            }
+        );
+        it("Should mint if the minter IS WhiteListed and WL is active.", async function () {
+            await tacvue721a.connect(owner).bulkWhitelistAdd([addr1.address]);
+            await tacvue721a.connect(owner).wlActiveSwitch();
+            expect(await tacvue721a.connect(addr1).wlActive()).to.equal(true);
+            await tacvue721a.connect(addr1).mint(1, {value: ethers.utils.parseEther("1")});
+            expect(await tacvue721a.balanceOf(addr1.address)).to.equal(1);
+            }        
+        );
+    }
+    );
+
+}
+);
