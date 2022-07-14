@@ -57,6 +57,42 @@ describe("Tacvue721a contract", function () {
             expect(await tacvue721a.balanceOf(addr1.address)).to.equal(1);
             }        
         );
+        it("Should revert if the minter is NOT WhiteListed and WL IS active", async function () {
+            await tacvue721a.connect(owner).wlActiveSwitch();
+            expect(await tacvue721a.wlActive()).to.equal(true);
+            expect(await tacvue721a.WhiteList(addr1.address)).to.equal(false);
+            await expect(tacvue721a.connect(addr1).mint(1, {value: ethers.utils.parseEther("1")})).to.be.reverted;
+            }
+        );
+    }
+    );
+    describe("Whitelist", function () {
+        it("Should add a new address to the WhiteList", async function () {
+            await tacvue721a.connect(owner).bulkWhitelistAdd([addr1.address]);
+            expect(await tacvue721a.WhiteList(addr1.address)).to.equal(true);
+            }
+        );
+        it("Should leave the user whitelisted if the address is already in the WhiteList", async function () {
+            await tacvue721a.connect(owner).bulkWhitelistAdd([addr1.address]);
+            await tacvue721a.connect(owner).bulkWhitelistAdd([addr1.address]);
+            expect(await tacvue721a.WhiteList(addr1.address)).to.equal(true);
+            }
+        );
+        it("Should return false if the address is not in the WhiteList", async function () {
+            expect(await tacvue721a.WhiteList(addr1.address)).to.equal(false);
+            }
+        );
+        it("Should remove an address from the WhiteList", async function () {
+            await tacvue721a.connect(owner).bulkWhitelistAdd([addr1.address]);
+            expect(await tacvue721a.WhiteList(addr1.address)).to.equal(true);
+            await tacvue721a.connect(owner).removeFromWhiteList(addr1.address);
+            expect(await tacvue721a.WhiteList(addr1.address)).to.equal(false);
+            }
+        );
+        it("Should revert if the address is not in the WhiteList", async function () {
+            await expect(tacvue721a.connect(owner).removeFromWhiteList(addr1.address)).to.be.reverted;
+            }
+        );
     }
     );
 
