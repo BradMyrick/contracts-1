@@ -12,7 +12,7 @@ contract RxgVending is  ReentrancyGuard {
     using SafeMath for uint256;
     address public immutable owner; // contract owner for access control
     IERC20 public immutable rxgToken; // erc20 token contract address
-    uint256 public immutable peggedPrice; // purchase price of rxg with pegged token. ex: for 1 rxg = 100 wei in AVAX,  peggedPrice would be equal to 100
+    uint256 public peggedPrice; // purchase price of rxg with pegged token. ex: for 1 rxg = 100 wei in AVAX,  peggedPrice would be equal to 100
     uint256 public rxgSupply; // total supply of rxg pegged token that can be sold
 // modifiers
     modifier onlyOwner {
@@ -42,8 +42,25 @@ contract RxgVending is  ReentrancyGuard {
         payable(owner).transfer(_amount);
         emit Withdrawn(_amount, msg.sender);
     }
-
+    /// @notice change the pegged price of rxg token
+    function changePrice(uint256 _price) external onlyOwner nonReentrant {
+        require(_price > 0, "Price must be greater than 0");
+        peggedPrice = _price;
+        emit PriceChanged(_price);
+    }
+    /// @notice add to the total supply of rxg token
+    function addRxg(uint256 _amount) external nonReentrant {
+        require(_amount > 0, "Amount must be greater than 0");
+        require(rxgToken.balanceOf(msg.sender) >= _amount, "Not enough RXG in wallet");
+        require(rxgToken.allowance(msg.sender, address(this)) >= _amount, "Not enough allowance to add RXG");
+        rxgSupply = rxgSupply.add(_amount);
+        emit RxgAdded(_amount);
+        // transfer rxg token to this contract
+        rxgToken.transferFrom(msg.sender, address(this), _amount);
+    }
 // events
     event Purchase(address indexed to, uint256 amount);
     event Withdrawn(uint256 indexed amount, address indexed from);
+    event PriceChanged(uint256 indexed price);
+    event RxgAdded(uint256 indexed amount);
 }

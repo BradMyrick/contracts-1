@@ -15,15 +15,46 @@ describe ("RxgVending contract", function () {
         RxgToken = await ethers.getContractFactory("Recharge");
         rxgToken = await RxgToken.connect(owner).deploy();
         RxgVending = await ethers.getContractFactory("RxgVending");
-        rxgSupply = await RxgVending.connect(owner).deploy( parseEther("0.000001"), rxgToken.address);
-        await rxgSupply.deployed();
+        rxgVending = await RxgVending.connect(owner).deploy( parseEther("0.000001"), rxgToken.address);
+        await rxgVending.deployed();
     }
     );
     describe("Deployment", function () {
         it("Should set the right owner", async function () {
-            expect(await rxgSupply.owner()).to.equal(owner.address);
+            expect(await rxgVending.owner()).to.equal(owner.address);
         });
     } 
     );
+    describe("Change Price", function () {
+        it("Should change the price if owner", async function () {
+            await rxgVending.connect(owner).changePrice(parseEther("1"));
+            expect(await rxgVending.peggedPrice()).to.equal(parseEther("1"));
+        }
+        );
+        it("Should not change the price if not owner", async function () {
+            await(expect(rxgVending.connect(addr1).changePrice(parseEther("1"))).to.be.reverted);
+        }
+        );
+    }
+    );
+    describe("Add Supply", function () {
+        it("Should add supply if approved", async function () {
+            await rxgToken.connect(owner).approve(rxgVending.address, parseEther("1"));
+            await rxgVending.connect(owner).addRxg(parseEther("1"));
+            expect(await rxgVending.rxgSupply()).to.equal(parseEther("1"));
+        }
+        );
+        it("Should not add supply if not approved", async function () {
+            await(expect(rxgVending.connect(addr1).addRxg(parseEther("1"))).to.be.reverted);
+        }
+        );
+        it("Should revert if you don't have enough approval", async function () {
+            await rxgToken.connect(owner).approve(rxgVending.address, parseEther("1"));
+            await(expect(rxgVending.connect(owner).addRxg(parseEther("2"))).to.be.reverted);
+        }
+        );
+    }
+    );
+
 }
 );
