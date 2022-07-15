@@ -53,6 +53,17 @@ describe ("RxgVending contract", function () {
             await(expect(rxgVending.connect(owner).addRxg(parseEther("2"))).to.be.reverted);
         }
         );
+        it("Should add the rxg to the supply no matter what account you use", async function () {
+            await rxgToken.connect(owner).transfer(addr1.address, parseEther("1"));
+            await rxgToken.connect(owner).transfer(addr2.address, parseEther("2"));
+
+            await rxgToken.connect(addr1).approve(rxgVending.address, parseEther("1"));
+            await rxgVending.connect(addr1).addRxg(parseEther("1"));
+            await rxgToken.connect(addr2).approve(rxgVending.address, parseEther("2"));
+            await rxgVending.connect(addr2).addRxg(parseEther("2"));
+            expect(await rxgVending.rxgSupply()).to.equal(parseEther("3"));
+        }
+        );
     }
     );
 
