@@ -10,10 +10,11 @@ describe ("RxgVending contract", function () {
     let RxgToken;
     let rxgToken;
 
+
     beforeEach(async function () {
-        [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+        [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
         RxgToken = await ethers.getContractFactory("Recharge");
-        rxgToken = await RxgToken.connect(owner).deploy();
+        rxgToken = await RxgToken.connect(owner).deploy(addr1.address, addr2.address, addr3.address);
         RxgVending = await ethers.getContractFactory("RxgVending");
         rxgVending = await RxgVending.connect(owner).deploy( parseEther("0.000001"), rxgToken.address);
         await rxgVending.deployed();
@@ -39,8 +40,8 @@ describe ("RxgVending contract", function () {
     );
     describe("Add Supply", function () {
         it("Should add supply if approved", async function () {
-            await rxgToken.connect(owner).approve(rxgVending.address, parseEther("1"));
-            await rxgVending.connect(owner).addRxg(parseEther("1"));
+            await rxgToken.connect(addr1).approve(rxgVending.address, parseEther("1"));
+            await rxgVending.connect(addr1).addRxg(parseEther("1"));
             expect(await rxgVending.rxgSupply()).to.equal(parseEther("1"));
         }
         );
@@ -49,14 +50,11 @@ describe ("RxgVending contract", function () {
         }
         );
         it("Should revert if you don't have enough approval", async function () {
-            await rxgToken.connect(owner).approve(rxgVending.address, parseEther("1"));
-            await(expect(rxgVending.connect(owner).addRxg(parseEther("2"))).to.be.reverted);
+            await rxgToken.connect(addr1).approve(rxgVending.address, parseEther("1"));
+            await(expect(rxgVending.connect(addr1).addRxg(parseEther("2"))).to.be.reverted);
         }
         );
         it("Should add the rxg to the supply no matter what account you use", async function () {
-            await rxgToken.connect(owner).transfer(addr1.address, parseEther("1"));
-            await rxgToken.connect(owner).transfer(addr2.address, parseEther("2"));
-
             await rxgToken.connect(addr1).approve(rxgVending.address, parseEther("1"));
             await rxgVending.connect(addr1).addRxg(parseEther("1"));
             await rxgToken.connect(addr2).approve(rxgVending.address, parseEther("2"));

@@ -14,11 +14,12 @@ describe("PaymentReceived contract", function () {
   let multiSig;
   let addr1;
   let addr2;
+  let addr3;
   let addrs;
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
-    [owner, addr1, addr2, multiSig, ...addrs] = await ethers.getSigners();
+    [owner, addr1, addr2, addr3, multiSig, ...addrs] = await ethers.getSigners();
     StringLibrary = await ethers.getContractFactory("StringCheck");
     stringLibrary = await StringLibrary.deploy();
     NftContract = await ethers.getContractFactory("Entity721a", {
@@ -28,7 +29,8 @@ describe("PaymentReceived contract", function () {
     });
     nftContract = await NftContract.connect(addr1).deploy();
     Erc20 = await ethers.getContractFactory("Recharge");
-    erc20 = await Erc20.connect(owner).deploy();
+    erc20 = await Erc20.connect(owner).deploy(addr1.address, addr2.address, addr3.address);
+
     PaymentReceived = await ethers.getContractFactory("PaymentReceived");
     paymentReceived = await PaymentReceived.deploy(erc20.address, parseEther("1"), multiSig.address);
     await paymentReceived.deployed();
@@ -46,7 +48,6 @@ describe("PaymentReceived contract", function () {
       expect(await paymentReceived.Authorized(ethers.constants.AddressZero, ethers.constants.AddressZero)).to.equal(false);    
     });
     it("Should return true if address is authorized", async function () {
-      await erc20.connect(owner).transfer(addr1.address, parseEther("10"));
       await erc20.connect(addr1).approve(paymentReceived.address, parseEther("1"));
       await paymentReceived.connect(addr1).authorize(nftContract.address);
       expect(await paymentReceived.Authorized(addr1.address, nftContract.address)).to.equal(true);
@@ -70,7 +71,6 @@ describe("PaymentReceived contract", function () {
 
   describe("Authorize", function () {
     it("Should authorize if paid", async function () {
-      await erc20.connect(owner).transfer(addr1.address, parseEther("10"));
       await erc20.connect(addr1).approve(paymentReceived.address, parseEther("1"));
       await paymentReceived.connect(addr1).authorize(nftContract.address);
       expect(await paymentReceived.Authorized(addr1.address, nftContract.address)).to.equal(true);
@@ -81,7 +81,6 @@ describe("PaymentReceived contract", function () {
     }
     );
     it("Shouldn't authorize if the owner is already authorized", async function () {
-      await erc20.connect(owner).transfer(addr1.address, parseEther("10"));
       await erc20.connect(addr1).approve(paymentReceived.address, parseEther("10"));
       await nftContract.connect(addr1).mint();
       await paymentReceived.connect(addr1).authorize(nftContract.address);
@@ -89,7 +88,6 @@ describe("PaymentReceived contract", function () {
     }
     );
     it("Should revert if sender is not the project owner", async function () {
-      await erc20.connect(owner).transfer(addr2.address, parseEther("10"));
       await erc20.connect(addr2).approve(paymentReceived.address, parseEther("1"));
       await expect (paymentReceived.connect(addr2).authorize(nftContract.address)).to.be.revertedWith("Only the collection creator can perform this action");
     }
