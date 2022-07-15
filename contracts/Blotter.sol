@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -8,7 +9,6 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 contract Blotter {
     using EnumerableSet for EnumerableSet.AddressSet;
     EnumerableSet.AddressSet private users;
-    address private activator;
     IERC20 public immutable token;
     address public owner;
     uint256 public immutable cost;
@@ -37,12 +37,10 @@ contract Blotter {
         // in wei, cost to promote a users twitter link
         token = IERC20(_token);
         owner = msg.sender;
-        activator = msg.sender;
         cost = _cost;
         }
 
-    function promoteTweet(string memory _link) external returns (bool success) {
-
+    function promoteTweet(string memory _link) external {
         // check if the user is already promoted if so replace the tweet.
         if (tweets[msg.sender].live) {
             _killPromotion(msg.sender);
@@ -56,10 +54,9 @@ contract Blotter {
         Tweet memory _tweet = tweets[_addr];
         emit TweetPromoted(_addr, _tweet.link);
         require(
-            token.transferFrom(msg.sender, activator, cost),
+            token.transferFrom(msg.sender, address(this), cost),
             "RXG failed to transfer"
         );
-        return true;
     }
 
 
@@ -98,16 +95,6 @@ contract Blotter {
         tweets[_addr].live = false;
         // remove from users
         users.remove(_addr);
-    }
-
-    function getActivator() external view returns (address) {
-        return activator;
-    }
-
-    function setActivator(address _activator) external onlyOwner {
-        // zero check for _activator
-        require(_activator != address(0), "Activator cannot be zero");
-        activator = _activator;
     }
 
 }

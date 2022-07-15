@@ -8,14 +8,9 @@ describe("PaymentReceived contract", function () {
   let stringLibrary;
   let Erc20;
   let erc20;
-  let owner;
   let NftContract;
   let nftContract;
-  let multiSig;
-  let addr1;
-  let addr2;
-  let addr3;
-  let addrs;
+
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.

@@ -6,7 +6,6 @@ describe ("RxgVending contract", function () {
     let RxgVending;
     let rxgVending;
     let peggedPrice = 1000;
-    let rxgSupply;
     let RxgToken;
     let rxgToken;
 
@@ -76,6 +75,11 @@ describe ("RxgVending contract", function () {
         it("Should not buy rxg if you don't have enough Avax", async function () {
 
             await(expect(rxgVending.connect(addr1).buyRxg({value: 0})).to.be.reverted);
+        }
+        );
+        it("Should not buy rxg if the Vending contract doesn't have enough rxg", async function () {
+            await rxgToken.connect(addr1).approve(rxgVending.address, parseEther("1"));
+            await(expect(rxgVending.connect(addr1).buyRxg({value: parseEther("1")})).to.be.reverted);
         }
         );
     }
