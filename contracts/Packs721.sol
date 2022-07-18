@@ -34,6 +34,7 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
     mapping(uint256 => uint256[]) public Packs; // pack id to pack token id's
     mapping(address => uint256) public walletMints; // number of times an address has minted
     mapping(address => bool) public WhiteList; // token id to token URI
+    mapping(uint256 => bool) public PackMinted; // true if the pack is already minted
 
 
 
@@ -59,6 +60,7 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
     function mint(uint256 _selection) external payable nonReentrant {
         require(saleActive != wlActive, "Minting Has Been Disabled");
         require(TOTAL_SUPPLY + packSize <= MAX_SUPPLY, "Max Supply Reached");
+        require(!PackMinted[_selection], "Pack already minted");
         walletMints[msg.sender] += packSize;
         require(walletMints[msg.sender] <= MAX_MINTS, "Max mints reached, lower amount to mint");
         emit Minted(msg.sender, _selection, packSize);
@@ -66,6 +68,7 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
         if (wlActive) {
             require(WhiteList[msg.sender], "Not whitelisted");
             require(msg.value >= (wlPrice), "Not enough Avax sent");
+            PackMinted[_selection] = true;
             for (uint256 i = 0; i < packSize; i++) {
                 _safeMint(msg.sender, tokens[i]);
                 TOTAL_SUPPLY += 1;
@@ -73,6 +76,7 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
         } else {
             require(saleActive, "Sale not active");
             require(msg.value >= (mintPrice), "Not enough Avax sent");
+            PackMinted[_selection] = true;
             for (uint256 i = 0; i < packSize; i++) {
                 _safeMint(msg.sender, tokens[i]);
                 TOTAL_SUPPLY += 1;
@@ -102,10 +106,10 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
     function withdraw() external onlyOwner nonReentrant {
         require(address(this).balance > 100 wei, "Not enough Avax to withdraw");
         uint256 fee = address(this).balance * 2 / 100;
+        uint256 profit = address(this).balance - fee;
         payable(feeCollector).transfer(fee);
-        emit FeeCollected(feeCollector, fee);
-        payable(msg.sender).transfer(address(this).balance - fee);
-        emit Withdrawal(msg.sender, address(this).balance - fee);
+        payable(msg.sender).transfer(profit);
+        emit Withdrawal(feeCollector, fee, msg.sender, profit);
     }
     // toggle the sale status
     function saleActiveSwitch() external onlyOwner {
@@ -127,7 +131,6 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
     event Minted(address indexed sender, uint256 indexed selection, uint256 amount);
     event WlAdded(address[] indexed _addr);
     event WlRemoved(address indexed _addr);
-    event Withdrawal(address indexed _addr, uint256 indexed _amount);
-    event FeeCollected(address indexed _addr, uint256 indexed _amount);
+    event Withdrawal(address indexed _feeCollector, uint256 _fee, address indexed _addr, uint256 indexed _amount);
 
 }

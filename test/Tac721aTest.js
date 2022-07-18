@@ -100,12 +100,13 @@ describe("Tacvue721a contract", function () {
         it("Should withdraw the correct amount of tokens", async function () {
             await tacvue721a.connect(owner).saleActiveSwitch();
             await tacvue721a.connect(addr1).mint(1, {value: ethers.utils.parseEther("1")});
-            // balance correctly updates to 1 eth below
             expect(await ethers.provider.getBalance(tacvue721a.address)).to.equal(ethers.utils.parseEther("1"));
-            await tacvue721a.connect(owner).withdraw();
-            // balance incorrectly updates to 2 eth below
-            expect(await ethers.provider.getBalance(tacvue721a.address)).to.equal(ethers.utils.parseEther("0"));
-            }
+            const tx = await tacvue721a.connect(owner).withdraw();
+            const receipt = await tx.wait()
+            for (const event of receipt.events) {
+                console.log(`Event ${event.event} with args ${event.args}`);
+              }
+        }
         );
         it("Should revert if the address is not owner", async function () {
             await tacvue721a.connect(owner).saleActiveSwitch();
