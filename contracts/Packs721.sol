@@ -2,9 +2,9 @@
 pragma solidity ^0.8.7;
 
 /**
- * @title Packs ERC721A
- * @notice Tacvue NFT Token Standard for ERC721A with instant reveal and mints in pack sizes decided by the owner at deployment
- * @dev No decoded a Whitelist that can be exploited to mint tokens during a Whitelist phase, add WL participants with addToWhiteList(address _addr).
+ * @title Packs ERC721
+ * @notice Tacvue NFT Token Standard for ERC721 with instant reveal and mints in pack sizes decided by the owner at deployment
+ * @dev No decod a Whitelist that can be exploited to mint tokens during a Whitelist phase, add WL participants with addToWhiteList(address _addr).
  *      Once the Whitelist sale has been started, toggling on the saleIsActive bool will disable the whitelist and allow the sale to start. 
  * @dev Assumptions (not checked, assumed to be always true):
  *        1) When assigning URI's to token IDs, the caller verified the URI is valid and matched to the token ID list provided.
@@ -19,7 +19,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
-contract Packs721a is ERC721, Ownable, ReentrancyGuard {
+contract Packs721 is ERC721, Ownable, ReentrancyGuard {
     uint256 public immutable MAX_MINTS; 
     uint256 public immutable MAX_SUPPLY; 
     uint256 public TOTAL_SUPPLY;
@@ -38,17 +38,17 @@ contract Packs721a is ERC721, Ownable, ReentrancyGuard {
 
 
 
-    constructor(string memory _name, string memory _ticker, uint256 _maxMints, uint256 _mintPrice, uint256 _wlPrice, string memory _baseURI, address _feeCollector, uint256 _packSize, uint256 _numOfPacks) ERC721(_name, _ticker){
+    constructor(string memory _name, string memory _ticker, uint256 _maxMints, uint256 _mintPrice, uint256 _wlPrice, string memory _inputURI, address _feeCollector, uint256 _packSize, uint256 _numOfPacks) ERC721(_name, _ticker){
         MAX_MINTS = _maxMints;
         mintPrice = _mintPrice;
         wlPrice = _wlPrice;
         TOTAL_SUPPLY = 0;
-        baseURI = _baseURI;
+        baseURI = _inputURI;
         feeCollector = _feeCollector;
         packSize = _packSize;
         uint256 nextTokenId = 1;
         for (uint256 i = 1; i <= _numOfPacks; i++) {
-            for (uint256 j = 1; j <= _packSize; j++) {
+            for (uint256 j = 0; j < _packSize; j++) {
                 Packs[i].push(nextTokenId);
                 nextTokenId++;
             }
@@ -62,18 +62,19 @@ contract Packs721a is ERC721, Ownable, ReentrancyGuard {
         walletMints[msg.sender] += packSize;
         require(walletMints[msg.sender] <= MAX_MINTS, "Max mints reached, lower amount to mint");
         emit Minted(msg.sender, _selection, packSize);
+        uint256[] memory tokens = Packs[_selection];
         if (wlActive) {
             require(WhiteList[msg.sender], "Not whitelisted");
             require(msg.value >= (wlPrice), "Not enough Avax sent");
-            for (uint256 i = 1; i <= packSize; i++) {
-                _safeMint(msg.sender, Packs[_selection][i]);
+            for (uint256 i = 0; i < packSize; i++) {
+                _safeMint(msg.sender, tokens[i]);
                 TOTAL_SUPPLY += 1;
             }
         } else {
             require(saleActive, "Sale not active");
             require(msg.value >= (mintPrice), "Not enough Avax sent");
-            for (uint256 i = 1; i <= packSize; i++) {
-                _safeMint(msg.sender, Packs[_selection][i]);
+            for (uint256 i = 0; i < packSize; i++) {
+                _safeMint(msg.sender, tokens[i]);
                 TOTAL_SUPPLY += 1;
             }
         }
