@@ -96,5 +96,29 @@ describe("Tacvue721a contract", function () {
     }
     );
 
+    describe("Withdraw", function () {
+        it("Should withdraw the correct amount of tokens", async function () {
+            await tacvue721a.connect(owner).saleActiveSwitch();
+            await tacvue721a.connect(addr1).mint(1, {value: ethers.utils.parseEther("1")});
+            // balance correctly updates to 1 eth below
+            expect(await ethers.provider.getBalance(tacvue721a.address)).to.equal(ethers.utils.parseEther("1"));
+            await tacvue721a.connect(owner).withdraw();
+            // balance incorrectly updates to 2 eth below
+            expect(await ethers.provider.getBalance(tacvue721a.address)).to.equal(ethers.utils.parseEther("0"));
+            }
+        );
+        it("Should revert if the address is not owner", async function () {
+            await tacvue721a.connect(owner).saleActiveSwitch();
+            await tacvue721a.connect(addr1).mint(1, {value: ethers.utils.parseEther("1")});
+            await expect(tacvue721a.connect(addr1).withdraw()).to.be.reverted;
+            }
+        );
+        it("Should revert if the address has no tokens", async function () {
+            await expect(tacvue721a.connect(owner).withdraw()).to.be.reverted;
+            }
+        );
+    }
+    );
+
 }
 );

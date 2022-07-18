@@ -2,9 +2,8 @@
 pragma solidity ^0.8.7;
 
 /**
- * @title Terran ERC721A
- * @notice Tacvue NFT Token Standard for ERC721A with post minting URI reveal
- * @dev Enter the placeholder URI for the placeholder image during contract deployment
+ * @title Packs ERC721A
+ * @notice Tacvue NFT Token Standard for ERC721A with instant reveal and mints in pack sizes decided by the owner at deployment
  * @dev No decoded a Whitelist that can be exploited to mint tokens during a Whitelist phase, add WL participants with addToWhiteList(address _addr).
  *      Once the Whitelist sale has been started, toggling on the saleIsActive bool will disable the whitelist and allow the sale to start. 
  * @dev Assumptions (not checked, assumed to be always true):
@@ -15,56 +14,73 @@ pragma solidity ^0.8.7;
  */
 
 
-import "erc721a/contracts/ERC721A.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
-contract Tacvue721a is ERC721A, Ownable, ReentrancyGuard {
-    uint256 public MAX_MINTS; 
-    uint256 public MAX_SUPPLY; 
-    uint256 public mintPrice;   
-    uint256 public wlPrice;     
+contract Packs721a is ERC721, Ownable, ReentrancyGuard {
+    uint256 public immutable MAX_MINTS; 
+    uint256 public immutable MAX_SUPPLY; 
+    uint256 public TOTAL_SUPPLY;
+    uint256 public immutable packSize;
+    uint256 public immutable mintPrice;   
+    uint256 public immutable wlPrice;     
     string public baseURI;
     bool public wlActive = false;
     bool public saleActive = false;
-    address public feeCollector;
+    address public immutable feeCollector;
 
+    mapping(uint256 => uint256[]) public Packs; // pack id to pack token id's
     mapping(address => uint256) public walletMints; // number of times an address has minted
     mapping(address => bool) public WhiteList; // token id to token URI
 
-    event WlAdded(address[] indexed _addr);
-    event WlRemoved(address indexed _addr);
-    event Withdrawal(address indexed _addr, uint256 indexed _amount);
-    event FeeCollected(address indexed _addr, uint256 indexed _amount);
 
-    constructor(string memory _name, string memory _ticker, uint256 _maxMints, uint256 _maxSupply, uint256 _mintPrice, uint256 _wlPrice, string memory _placeholderURI, address _feeCollector) ERC721A(_name, _ticker){
+
+
+    constructor(string memory _name, string memory _ticker, uint256 _maxMints, uint256 _mintPrice, uint256 _wlPrice, string memory _baseURI, address _feeCollector, uint256 _packSize, uint256 _numOfPacks) ERC721(_name, _ticker){
         MAX_MINTS = _maxMints;
-        MAX_SUPPLY = _maxSupply;
         mintPrice = _mintPrice;
         wlPrice = _wlPrice;
-        baseURI = _placeholderURI;
+        TOTAL_SUPPLY = 0;
+        baseURI = _baseURI;
         feeCollector = _feeCollector;
+        packSize = _packSize;
+        uint256 nextTokenId = 1;
+        for (uint256 i = 1; i <= _numOfPacks; i++) {
+            for (uint256 j = 1; j <= _packSize; j++) {
+                Packs[i].push(nextTokenId);
+                nextTokenId++;
+            }
+        }
+        MAX_SUPPLY = nextTokenId - 1;
     }
 
-    function mint(uint256 quantity) external payable nonReentrant {
+    function mint(uint256 _selection) external payable nonReentrant {
         require(saleActive != wlActive, "Minting Has Been Disabled");
-        require(totalSupply() + quantity <= MAX_SUPPLY, "Max Supply Reached");
-        walletMints[msg.sender] += quantity;
+        require(TOTAL_SUPPLY + packSize <= MAX_SUPPLY, "Max Supply Reached");
+        walletMints[msg.sender] += packSize;
         require(walletMints[msg.sender] <= MAX_MINTS, "Max mints reached, lower amount to mint");
+        emit Minted(msg.sender, _selection, packSize);
         if (wlActive) {
             require(WhiteList[msg.sender], "Not whitelisted");
-            require(msg.value >= (wlPrice * quantity), "Not enough Avax sent");
-            _safeMint(msg.sender, quantity);
+            require(msg.value >= (wlPrice), "Not enough Avax sent");
+            for (uint256 i = 1; i <= packSize; i++) {
+                _safeMint(msg.sender, Packs[_selection][i]);
+                TOTAL_SUPPLY += 1;
+            }
         } else {
             require(saleActive, "Sale not active");
-            require(msg.value >= (mintPrice * quantity), "Not enough Avax sent");
-            _safeMint(msg.sender, quantity);
+            require(msg.value >= (mintPrice), "Not enough Avax sent");
+            for (uint256 i = 1; i <= packSize; i++) {
+                _safeMint(msg.sender, Packs[_selection][i]);
+                TOTAL_SUPPLY += 1;
+            }
         }
     }
 
 
-    // Bulk WhiteListing add up to 100 addresses at a time to the whitelist
+    // Bulk WhiteListing add up to 50 addresses at a time to the whitelist
     function bulkWhitelistAdd(address[] calldata _addrs) external onlyOwner nonReentrant returns(bool success) {
         require(_addrs.length <= 50, "Looping sucks on chain, use less than 50 addresses");
         for (uint i = 0; i < _addrs.length; i++) {
@@ -101,16 +117,16 @@ contract Tacvue721a is ERC721A, Ownable, ReentrancyGuard {
         wlActive = !wlActive;
     }
 
-    // function to set the base URI for the token
-    function setBaseURI(string memory _URI) external onlyOwner {
-        baseURI = _URI;
-    }
     // override the _baseURI function in ERC721A
     function _baseURI() override internal view virtual returns (string memory) {
         return baseURI;
     }
 
 // events
-    event CollectionMinted(address indexed sender, uint256 indexed quantity);
+    event Minted(address indexed sender, uint256 indexed selection, uint256 amount);
+    event WlAdded(address[] indexed _addr);
+    event WlRemoved(address indexed _addr);
+    event Withdrawal(address indexed _addr, uint256 indexed _amount);
+    event FeeCollected(address indexed _addr, uint256 indexed _amount);
 
 }
