@@ -39,7 +39,8 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
 
 
 
-    constructor(string memory _name, string memory _ticker, uint256 _maxMints, uint256 _mintPrice, uint256 _wlPrice, string memory _inputURI, address _feeCollector, uint256 _packSize, uint256 _numOfPacks) ERC721(_name, _ticker){
+    constructor(string memory _collectionName, string memory _ticker, uint256 _maxMints, uint256 _mintPrice, uint256 _wlPrice, string memory _inputURI, address _feeCollector, uint256 _packSize, uint256 _numOfPacks) ERC721(_collectionName, _ticker){
+        require(_feeCollector != address(0), "Cannot be 0 address");
         MAX_MINTS = _maxMints;
         mintPrice = _mintPrice;
         wlPrice = _wlPrice;
@@ -70,16 +71,16 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
             require(msg.value >= (wlPrice), "Not enough Avax sent");
             PackMinted[_selection] = true;
             for (uint256 i = 0; i < packSize; i++) {
-                _safeMint(msg.sender, tokens[i]);
                 TOTAL_SUPPLY += 1;
+                _safeMint(msg.sender, tokens[i]);
             }
         } else {
             require(saleActive, "Sale not active");
             require(msg.value >= (mintPrice), "Not enough Avax sent");
             PackMinted[_selection] = true;
             for (uint256 i = 0; i < packSize; i++) {
-                _safeMint(msg.sender, tokens[i]);
                 TOTAL_SUPPLY += 1;
+                _safeMint(msg.sender, tokens[i]);
             }
         }
     }
@@ -107,9 +108,9 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
         require(address(this).balance > 100 wei, "Not enough Avax to withdraw");
         uint256 fee = address(this).balance * 2 / 100;
         uint256 profit = address(this).balance - fee;
+        emit Withdrawal(feeCollector, fee, msg.sender, profit);
         payable(feeCollector).transfer(fee);
         payable(msg.sender).transfer(profit);
-        emit Withdrawal(feeCollector, fee, msg.sender, profit);
     }
     // toggle the sale status
     function saleActiveSwitch() external onlyOwner {

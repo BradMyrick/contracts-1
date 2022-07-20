@@ -34,6 +34,7 @@ contract PaymentReceived is ReentrancyGuard {
     }
     /// @dev constructor arguments address of erc20 contract, price in erc20 wei, and address of multisig wallet.
     constructor(address _rxg, uint256 _amount, address _multiSigWallet) {
+        require(_multiSigWallet != address(0), "Cannot be a 0 address"); 
         paymentToken = IERC20(_rxg);
         owner = payable(msg.sender);
         multiSigWallet = _multiSigWallet;

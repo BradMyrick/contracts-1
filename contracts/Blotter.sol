@@ -12,7 +12,6 @@ contract Blotter {
     IERC20 public immutable token;
     address public owner;
     uint256 public immutable cost;
-    IERC721 public entityNFT;
     struct Tweet {
         bool live;
         string link;
@@ -28,10 +27,6 @@ contract Blotter {
         _;
     }
 
-    modifier onlyHolder() {
-        require(entityNFT.balanceOf(msg.sender) > 0, "You don't have an entity");
-        _;
-    }
     // entity check removed until new entity contract launch
     constructor(uint256 _cost, address _token) {
         // in wei, cost to promote a users twitter link
@@ -50,7 +45,7 @@ contract Blotter {
         tweets[_addr].link = _link;
         tweets[_addr].timestamp = block.timestamp;
         tweets[_addr].live = true;
-        users.add(_addr);
+        require(users.add(_addr), "Failed to add tweet to user");
         Tweet memory _tweet = tweets[_addr];
         emit TweetPromoted(_addr, _tweet.link);
         require(
@@ -87,14 +82,14 @@ contract Blotter {
         emit TweetDemoted(_addr, tweets[_addr].link);
         tweets[_addr].live = false;
         // remove from users
-        users.remove(_addr);
+        require(users.remove(_addr), "Failed to remove user from users");
     }
 
     function _killPromotion(address _addr) internal {
         emit TweetDemoted (_addr, tweets[_addr].link);
         tweets[_addr].live = false;
         // remove from users
-        users.remove(_addr);
+        require(users.remove(_addr), "Failed to remove user from users");
     }
 
 }

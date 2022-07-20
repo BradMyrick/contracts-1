@@ -38,7 +38,9 @@ contract Tacvue721a is ERC721A, Ownable, ReentrancyGuard {
     event WlRemoved(address indexed _addr);
     event Withdrawal(address indexed _feeCollector, uint256 _fee, address indexed _addr, uint256 indexed _amount);
 
-    constructor(string memory _name, string memory _ticker, uint256 _maxMints, uint256 _maxSupply, uint256 _mintPrice, uint256 _wlPrice, string memory _placeholderURI, address _feeCollector) ERC721A(_name, _ticker){
+    constructor(string memory _collectionName, string memory _ticker, uint256 _maxMints, uint256 _maxSupply, uint256 _mintPrice, uint256 _wlPrice, string memory _placeholderURI, address _feeCollector) ERC721A(_collectionName, _ticker){
+        require(_feeCollector != address(0), "Cannot be 0 address");
+
         MAX_MINTS = _maxMints;
         MAX_SUPPLY = _maxSupply;
         mintPrice = _mintPrice;
@@ -86,9 +88,9 @@ contract Tacvue721a is ERC721A, Ownable, ReentrancyGuard {
         require(address(this).balance > 100 wei, "Not enough Avax to withdraw");
         uint256 fee = address(this).balance * 2 / 100;
         uint256 profit = address(this).balance - fee;
+        emit Withdrawal(feeCollector, fee, msg.sender, profit);
         payable(feeCollector).transfer(fee);
         payable(msg.sender).transfer(profit);
-        emit Withdrawal(feeCollector, fee, msg.sender, profit);
     }
     // toggle the sale status
     function saleActiveSwitch() external onlyOwner {
