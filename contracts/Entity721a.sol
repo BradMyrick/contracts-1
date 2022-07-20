@@ -5,26 +5,30 @@ library StringCheck {
     /// @dev Does a byte-by-byte lexicographical comparison of two strings.
     /// return a negative number if `_a` is smaller, zero if they are equal
     /// and a positive numbe if `_b` is smaller.
-    function _compare(string memory _a, string memory _b) internal pure returns (int) {
+    function _compare(string memory _a, string memory _b)
+        internal
+        pure
+        returns (int256)
+    {
         bytes memory a = bytes(_a);
         bytes memory b = bytes(_b);
-        uint minLength = a.length;
+        uint256 minLength = a.length;
         if (b.length < minLength) minLength = b.length;
         //@todo unroll the loop into increments of 32 and do full 32 byte comparisons
-        for (uint i = 0; i < minLength; i ++)
-            if (a[i] < b[i])
-                return -1;
-            else if (a[i] > b[i])
-                return 1;
-        if (a.length < b.length)
-            return -1;
-        else if (a.length > b.length)
-            return 1;
-        else
-            return 0;
+        for (uint256 i = 0; i < minLength; i++)
+            if (a[i] < b[i]) return -1;
+            else if (a[i] > b[i]) return 1;
+        if (a.length < b.length) return -1;
+        else if (a.length > b.length) return 1;
+        else return 0;
     }
+
     /// @dev Compares two strings and returns true iff they are equal.
-    function equal(string memory _a, string memory _b) public pure returns (bool) {
+    function equal(string memory _a, string memory _b)
+        public
+        pure
+        returns (bool)
+    {
         return _compare(_a, _b) == 0;
     }
 }
@@ -39,21 +43,24 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  * @dev Enter the placeholder URI for the placeholder image during contract deployment
  * @author BradMyrick @kodr_eth
  */
- pragma solidity ^0.8.7;
+pragma solidity ^0.8.7;
 
-contract Entity721a is ERC721A, Ownable, ReentrancyGuard { 
-    bool public mintLive; 
+contract Entity721a is ERC721A, Ownable, ReentrancyGuard {
+    bool public mintLive;
     string public placeHolderURI = "https://tacvue.io/placeholder.png"; // todo: replace placeholder fake link
 
     /// @dev token uri mapping
     mapping(uint256 => string) public tokenURIs;
 
     modifier onlyTokenOwner(uint256 _tokenId) {
-        require(ownerOf(_tokenId) == msg.sender, "Only the token owner can call this function");
+        require(
+            ownerOf(_tokenId) == msg.sender,
+            "Only the token owner can call this function"
+        );
         _;
     }
 
-    constructor() ERC721A("Genesis Entity", "TVGE"){
+    constructor() ERC721A("Genesis Entity", "TVGE") {
         mintLive = true;
     }
 
@@ -67,13 +74,25 @@ contract Entity721a is ERC721A, Ownable, ReentrancyGuard {
     }
 
     /// @dev function to set the token URI for a minted token
-    function setTokenURI(string memory _URI, uint256 _tokenId) external onlyTokenOwner(_tokenId) nonReentrant {
-        require(StringCheck.equal(tokenURIs[_tokenId], placeHolderURI), "You can only set the URI for a token once");
-        tokenURIs[_tokenId] = _URI;       
+    function setTokenURI(string memory _URI, uint256 _tokenId)
+        external
+        onlyTokenOwner(_tokenId)
+        nonReentrant
+    {
+        require(
+            StringCheck.equal(tokenURIs[_tokenId], placeHolderURI),
+            "You can only set the URI for a token once"
+        );
+        tokenURIs[_tokenId] = _URI;
     }
 
     /// @dev override the tokenURI function in ERC721A
-    function tokenURI(uint256 _tokenId) override public view returns (string memory) {
+    function tokenURI(uint256 _tokenId)
+        public
+        view
+        override
+        returns (string memory)
+    {
         // require the token to exist
         require(_exists(_tokenId), "Token does not exist");
         return tokenURIs[_tokenId];
@@ -86,9 +105,12 @@ contract Entity721a is ERC721A, Ownable, ReentrancyGuard {
     }
 
     /// @dev burn a token
-    function burn(uint256 _tokenId) external onlyTokenOwner(_tokenId) nonReentrant {
+    function burn(uint256 _tokenId)
+        external
+        onlyTokenOwner(_tokenId)
+        nonReentrant
+    {
         require(_exists(_tokenId), "Token does not exist");
         _burn(_tokenId);
     }
-
 }

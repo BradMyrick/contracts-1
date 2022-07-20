@@ -5,6 +5,7 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 // contract to map addresses to twitter links for promotion
 contract Blotter {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -33,7 +34,7 @@ contract Blotter {
         token = IERC20(_token);
         owner = msg.sender;
         cost = _cost;
-        }
+    }
 
     function promoteTweet(string memory _link) external {
         // check if the user is already promoted if so replace the tweet.
@@ -54,8 +55,11 @@ contract Blotter {
         );
     }
 
-
-    function getTwitterLinks(address _addr) external view returns (Tweet memory) {
+    function getTwitterLinks(address _addr)
+        external
+        view
+        returns (Tweet memory)
+    {
         return tweets[_addr];
     }
 
@@ -66,7 +70,7 @@ contract Blotter {
     function getAllTweets() external view returns (Tweet[] memory) {
         Tweet[] memory _tweets = new Tweet[](users.length());
         for (uint256 i = 0; i < users.length(); i++) {
-            if (tweets[users.at(i)].live){
+            if (tweets[users.at(i)].live) {
                 _tweets[i] = tweets[users.at(i)];
             }
         }
@@ -86,10 +90,9 @@ contract Blotter {
     }
 
     function _killPromotion(address _addr) internal {
-        emit TweetDemoted (_addr, tweets[_addr].link);
+        emit TweetDemoted(_addr, tweets[_addr].link);
         tweets[_addr].live = false;
         // remove from users
         require(users.remove(_addr), "Failed to remove user from users");
     }
-
 }

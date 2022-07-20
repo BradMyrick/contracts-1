@@ -34,7 +34,10 @@ contract RxgVending is ReentrancyGuard {
         require(msg.value >= rxgPerAvax, "Not enough Avax sent");
         uint256 rxgAmount = msg.value.mul(rxgPerAvax);
         // transfer rxg token to the msg.sender
-        require(rxgToken.transfer(msg.sender, rxgAmount), "Token transfer failed");
+        require(
+            rxgToken.transfer(msg.sender, rxgAmount),
+            "Token transfer failed"
+        );
     }
 
     /// @notice withdraws AVAX from the contract

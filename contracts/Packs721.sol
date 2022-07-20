@@ -4,7 +4,7 @@ pragma solidity ^0.8.7;
 /**
  * @title Packs ERC721
  * @notice Tacvue NFT Token Standard for ERC721 with instant reveal and mints in pack sizes decided by the owner at deployment
- * @dev No decod a Whitelist that can be exploited to mint tokens during a Whitelist phase, add WL participants with addToWhiteList(address _addr).
+ * @dev No decoding of a Whitelist that can be exploited to mint tokens during a Whitelist phase, add WL participants with addToWhiteList(address _addr).
  *      Once the Whitelist sale has been started, toggling on the saleIsActive bool will disable the whitelist and allow the sale to start. 
  * @dev Assumptions (not checked, assumed to be always true):
  *        1) When assigning URI's to token IDs, the caller verified the URI is valid and matched to the token ID list provided.
