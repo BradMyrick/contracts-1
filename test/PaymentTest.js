@@ -1,6 +1,12 @@
-const { expect } = require("chai");
-const { parseEther } = require("ethers/lib/utils");
-const { ethers } = require("hardhat");
+const {
+  expect
+} = require("chai");
+const {
+  parseEther
+} = require("ethers/lib/utils");
+const {
+  ethers
+} = require("hardhat");
 describe("PaymentReceived contract", function () {
   let PaymentReceived;
   let paymentReceived;
@@ -31,12 +37,11 @@ describe("PaymentReceived contract", function () {
     it("Should set the right owner", async function () {
       expect(await paymentReceived.owner()).to.equal(owner.address);
     });
-  } 
-  );
+  });
 
   describe("Is Authorized", function () {
     it("Should return false for 0 address", async function () {
-      expect(await paymentReceived.Authorized(ethers.constants.AddressZero, ethers.constants.AddressZero)).to.equal(false);    
+      expect(await paymentReceived.Authorized(ethers.constants.AddressZero, ethers.constants.AddressZero)).to.equal(false);
     });
     it("Should return true if address is authorized", async function () {
       await erc20.connect(addr1).approve(paymentReceived.address, parseEther("1"));
@@ -52,12 +57,10 @@ describe("PaymentReceived contract", function () {
     it("Should change payment if owner", async function () {
       await paymentReceived.changePrice(parseEther("2"));
       expect(await paymentReceived.assemblerPrice()).to.equal(parseEther("2"));
-    }
-    );
+    });
     it("Should revert if not owner", async function () {
       await expect(paymentReceived.connect(addr1).changePrice(25, "test price")).to.be.reverted;
-    }
-    );
+    });
   });
 
   describe("Authorize", function () {
@@ -65,44 +68,37 @@ describe("PaymentReceived contract", function () {
       await erc20.connect(addr1).approve(paymentReceived.address, parseEther("1"));
       await paymentReceived.connect(addr1).authorize(nftContract.address);
       expect(await paymentReceived.Authorized(addr1.address, nftContract.address)).to.equal(true);
-    }
-    );
+    });
     it("Shouldn't authorize if price not approved", async function () {
-      await expect (paymentReceived.connect(addr2).authorize(nftContract.address)).to.be.reverted;
-    }
-    );
+      await expect(paymentReceived.connect(addr2).authorize(nftContract.address)).to.be.reverted;
+    });
     it("Shouldn't authorize if the owner is already authorized", async function () {
       await erc20.connect(addr1).approve(paymentReceived.address, parseEther("10"));
       await nftContract.connect(addr1).mint();
       await paymentReceived.connect(addr1).authorize(nftContract.address);
-      await expect (paymentReceived.connect(addr1).authorize(nftContract.address)).to.be.revertedWith("Already authorized");
-    }
-    );
+      await expect(paymentReceived.connect(addr1).authorize(nftContract.address)).to.be.revertedWith("Already authorized");
+    });
     it("Should revert if sender is not the project owner", async function () {
       await erc20.connect(addr2).approve(paymentReceived.address, parseEther("1"));
-      await expect (paymentReceived.connect(addr2).authorize(nftContract.address)).to.be.revertedWith("Only the collection creator can perform this action");
-    }
-    );
-  }
-  );
+      await expect(paymentReceived.connect(addr2).authorize(nftContract.address)).to.be.revertedWith("Only the collection creator can perform this action");
+    });
+  });
 
   describe("Change Payment Token", function () {
     it("Should change payment if owner", async function () {
       await paymentReceived.connect(owner).changePaymentToken(addr2.address);
       expect(await paymentReceived.paymentToken()).to.equal(addr2.address);
-    }
-    );
+    });
     it("Should revert if not owner", async function () {
       await expect(paymentReceived.connect(addr1).changePaymentToken(addr2.address)).to.be.reverted;
-    }
-    );
-  }
-  );
+    });
+  });
   describe("Payable function", function () {
     it("Should revert if base token is sent", async function () {
-      await expect(owner.sendTransaction({ to: paymentReceived.address, value: parseEther("1") })).to.be.revertedWith("function selector was not recognized and there's no fallback nor receive function");
-    }
-    );
-  }
-  );
+      await expect(owner.sendTransaction({
+        to: paymentReceived.address,
+        value: parseEther("1")
+      })).to.be.revertedWith("function selector was not recognized and there's no fallback nor receive function");
+    });
+  });
 });

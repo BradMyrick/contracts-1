@@ -4,32 +4,32 @@
 pragma solidity ^0.8.7;
 
 contract MultiSigWallet {
-    event Deposit(address indexed sender, uint amount, uint balance);
+    event Deposit(address indexed sender, uint256 amount, uint256 balance);
     event SubmitTransaction(
         address indexed owner,
-        uint indexed txIndex,
+        uint256 indexed txIndex,
         address indexed to,
-        uint value,
+        uint256 value,
         bytes data
     );
-    event ConfirmTransaction(address indexed owner, uint indexed txIndex);
-    event RevokeConfirmation(address indexed owner, uint indexed txIndex);
-    event ExecuteTransaction(address indexed owner, uint indexed txIndex);
+    event ConfirmTransaction(address indexed owner, uint256 indexed txIndex);
+    event RevokeConfirmation(address indexed owner, uint256 indexed txIndex);
+    event ExecuteTransaction(address indexed owner, uint256 indexed txIndex);
 
     address[] public owners;
     mapping(address => bool) public isOwner;
-    uint public immutable numConfirmationsRequired;
+    uint256 public immutable numConfirmationsRequired;
 
     struct Transaction {
         address to;
-        uint value;
+        uint256 value;
         bytes data;
         bool executed;
-        uint numConfirmations;
+        uint256 numConfirmations;
     }
 
     // mapping from tx index => owner => bool
-    mapping(uint => mapping(address => bool)) public isConfirmed;
+    mapping(uint256 => mapping(address => bool)) public isConfirmed;
 
     Transaction[] public transactions;
 
@@ -38,22 +38,22 @@ contract MultiSigWallet {
         _;
     }
 
-    modifier txExists(uint _txIndex) {
+    modifier txExists(uint256 _txIndex) {
         require(_txIndex < transactions.length, "tx does not exist");
         _;
     }
 
-    modifier notExecuted(uint _txIndex) {
+    modifier notExecuted(uint256 _txIndex) {
         require(!transactions[_txIndex].executed, "tx already executed");
         _;
     }
 
-    modifier notConfirmed(uint _txIndex) {
+    modifier notConfirmed(uint256 _txIndex) {
         require(!isConfirmed[_txIndex][msg.sender], "tx already confirmed");
         _;
     }
 
-    constructor(address[] memory _owners, uint _numConfirmationsRequired) {
+    constructor(address[] memory _owners, uint256 _numConfirmationsRequired) {
         require(_owners.length > 0, "owners required");
         require(
             _numConfirmationsRequired > 0 &&
@@ -61,7 +61,7 @@ contract MultiSigWallet {
             "invalid number of required confirmations"
         );
 
-        for (uint i = 0; i < _owners.length; i++) {
+        for (uint256 i = 0; i < _owners.length; i++) {
             address owner = _owners[i];
 
             require(owner != address(0), "invalid owner");
@@ -80,10 +80,10 @@ contract MultiSigWallet {
 
     function submitTransaction(
         address _to,
-        uint _value,
+        uint256 _value,
         bytes calldata _data
     ) external onlyOwner {
-        uint txIndex = transactions.length;
+        uint256 txIndex = transactions.length;
 
         transactions.push(
             Transaction({
@@ -98,7 +98,7 @@ contract MultiSigWallet {
         emit SubmitTransaction(msg.sender, txIndex, _to, _value, _data);
     }
 
-    function confirmTransaction(uint _txIndex)
+    function confirmTransaction(uint256 _txIndex)
         external
         onlyOwner
         txExists(_txIndex)
@@ -112,7 +112,7 @@ contract MultiSigWallet {
         emit ConfirmTransaction(msg.sender, _txIndex);
     }
 
-    function executeTransaction(uint _txIndex)
+    function executeTransaction(uint256 _txIndex)
         external
         onlyOwner
         txExists(_txIndex)
@@ -135,7 +135,7 @@ contract MultiSigWallet {
         emit ExecuteTransaction(msg.sender, _txIndex);
     }
 
-    function revokeConfirmation(uint _txIndex)
+    function revokeConfirmation(uint256 _txIndex)
         external
         onlyOwner
         txExists(_txIndex)
@@ -155,19 +155,19 @@ contract MultiSigWallet {
         return owners;
     }
 
-    function getTransactionCount() external view returns (uint) {
+    function getTransactionCount() external view returns (uint256) {
         return transactions.length;
     }
 
-    function getTransaction(uint _txIndex)
+    function getTransaction(uint256 _txIndex)
         external
         view
         returns (
             address to,
-            uint value,
+            uint256 value,
             bytes memory data,
             bool executed,
-            uint numConfirmations
+            uint256 numConfirmations
         )
     {
         Transaction storage transaction = transactions[_txIndex];

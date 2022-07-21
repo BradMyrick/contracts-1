@@ -1,8 +1,14 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
-const { parseEther } = require("ethers/lib/utils");
+const {
+    expect
+} = require("chai");
+const {
+    ethers
+} = require("hardhat");
+const {
+    parseEther
+} = require("ethers/lib/utils");
 
-describe ("Blotter contract", function () {
+describe("Blotter contract", function () {
     let Blotter;
     let blotter;
     let Erc20;
@@ -17,16 +23,12 @@ describe ("Blotter contract", function () {
         Blotter = await ethers.getContractFactory("Blotter");
         blotter = await Blotter.deploy(parseEther("1"), erc20.address);
         await blotter.deployed();
-    }
-    );
+    });
 
     describe("Deployment", function () {
         it("Should set the right owner", async function () {
             expect(await blotter.owner()).to.equal(owner.address);
-        }
-        );
-    } 
-    );
+        });
+    });
 
-}
-);
+});

@@ -6,34 +6,37 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract OneByOne721 is ERC721Enumerable, ERC721Burnable, Ownable{
-
+contract OneByOne721 is ERC721Enumerable, ERC721Burnable, Ownable {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIdTracker;
-// mapping
+    // mapping
     mapping(uint256 => string) private _tokenURIs;
-// constructor
-    constructor(string memory _name, string memory _ticker) ERC721( _name, _ticker){ }   
-// functions
-/**
+
+    // constructor
+    constructor(string memory _name, string memory _ticker)
+        ERC721(_name, _ticker)
+    {}
+
+    // functions
+    /**
 
  * @dev mint function for contract creator to add collectibles one by one
 
  */
 
-    function mint(string calldata _tokenURI) external virtual onlyOwner{
+    function mint(string calldata _tokenURI) external virtual onlyOwner {
         // We cannot just use balanceOf to create the new tokenId because tokens
         // can be burned (destroyed), so we need a separate counter.
-        require(bytes(_tokenURI).length !=0, "Url token is empty.");
+        require(bytes(_tokenURI).length != 0, "Url token is empty.");
         _tokenIdTracker.increment();
         // set the tokenURI
         setTokenURI(_tokenIdTracker.current(), _tokenURI);
-        _mint(msg.sender, _tokenIdTracker.current());  
-
+        _mint(msg.sender, _tokenIdTracker.current());
     }
-// functions
-        function _beforeTokenTransfer(
+
+    // functions
+    function _beforeTokenTransfer(
         address from,
         address to,
         uint256 tokenId
@@ -48,22 +51,33 @@ contract OneByOne721 is ERC721Enumerable, ERC721Burnable, Ownable{
         public
         view
         virtual
-        override( ERC721, ERC721Enumerable)
+        override(ERC721, ERC721Enumerable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
     }
+
     /**
      * @dev set token URI for a given token ID
      */
     function setTokenURI(uint256 _tokenId, string memory _URI) internal {
         _tokenURIs[_tokenId] = _URI;
     }
-     /**
+
+    /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenId) public view virtual override(ERC721) returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override(ERC721)
+        returns (string memory)
+    {
+        require(
+            _exists(tokenId),
+            "ERC721Metadata: URI query for nonexistent token"
+        );
         return _tokenURIs[tokenId];
     }
 }

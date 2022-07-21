@@ -7,7 +7,9 @@ const {
 const {
     parseEther
 } = require("ethers/lib/utils");
-const { BigNumber } = require("ethers");
+const {
+    BigNumber
+} = require("ethers");
 
 describe("Tacvue721a contract", function () {
     let Tacvue721a;
@@ -132,8 +134,10 @@ describe("Tacvue721a contract", function () {
             });
             let royalty = [
                 '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-               { value: '20000000000000000' }
-              ]
+                {
+                    value: '20000000000000000'
+                }
+            ]
             let check = await tacvue721a.royaltyInfo(1, ethers.utils.parseEther("1"))
 
             expect(check[0]).to.equal(royalty[0]);
@@ -146,14 +150,14 @@ describe("Tacvue721a contract", function () {
             });
             let royalty = [
                 '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266',
-               { value: '40000000000000000' }
-              ]
+                {
+                    value: '40000000000000000'
+                }
+            ]
             let check = await tacvue721a.royaltyInfo(1, ethers.utils.parseEther("1"))
-
             expect(check[0]).to.equal(royalty[0]);
             expect(check[1]).to.not.equal(royalty[1].value);
-        }
-        );
+        });
 
     });
 
