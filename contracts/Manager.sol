@@ -35,7 +35,7 @@ contract AuctionManager is AccessControl, ReentrancyGuard {
         uint256 _startPrice,
         address _nftAddress,
         uint256 _tokenId
-    ) external nonReentrant returns (bool) {
+    ) external nonReentrant returns (address _auctionAddress) {
         require(
             _directBuyPrice >= 1000000000000000 wei,
             "Direct buy price must be greater than 1000000000000000 wei"
@@ -70,7 +70,7 @@ contract AuctionManager is AccessControl, ReentrancyGuard {
         // token transfer to the auction
         IERC721 _nftToken = IERC721(_nftAddress); // get the nft token
         _nftToken.transferFrom(msg.sender, address(auction), _tokenId); // transfer the token to the auction
-        return true;
+        return address(auction); // return the address of the auction
     }
 
     // Return a list of all auctions
