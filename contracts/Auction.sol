@@ -4,11 +4,13 @@ pragma solidity ^0.8.7;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
 import "./Manager.sol";
 
 contract Auction is ReentrancyGuard {
     using SafeMath for uint256;
+
     address public immutable manager; // The address of the owner
     address public maxBidder; // The address of the maximum bidder
     address public immutable nftAddress; // The address of the NFT contract
@@ -24,8 +26,10 @@ contract Auction is ReentrancyGuard {
     bool public isDirectBuy; // True if the auction ended due to direct buy
     bool public reserveMet; // True if the reserve has been met
     bool public auctionSold; // True if the auction has been sold via auction
+    address public feeCollector;
+
     // 2% fee for auction manager
-    uint256 public constant fee = 2;
+    uint256 public constant fee = 200;
     IERC721 _nft; // The NFT token
     bool public immutable buyNow; // True if the auction can be purchased directly
 
@@ -138,7 +142,7 @@ contract Auction is ReentrancyGuard {
                 // notify the manager
                 notifyStateChange();
                 emit NFTWithdrawn(maxBidder); // Emit a withdraw token event
-                uint256 _fee = maxBid.mul(fee).div(100); // Calculate the fee
+                uint256 _fee = (maxBid * fee) / 10000;
                 emit FundsWithdrawn(creator, maxBid - _fee); // Emit a withdraw funds event
                 payable(creator).transfer(maxBid - _fee); // Transfers funds to the creator
                 _nft.transferFrom(address(this), maxBidder, tokenId); // Transfer the token to the highest bidder
@@ -196,11 +200,26 @@ contract Auction is ReentrancyGuard {
             _nft.transferFrom(address(this), creator, tokenId); // Transfer the NFT token to the auction creator
         } else {
             // If the reserve has been met
+            // Calculate the royalty based on ERC2981 standard
+            (address royaltyReceiver, uint256 royaltyToPay) = ERC2981(
+                nftAddress
+            ).royaltyInfo(tokenId, maxBid);
             auctionSold = true; // The auction has been sold
             _nft.transferFrom(address(this), maxBidder, tokenId); // Transfer the NFT token to the auction creator
             uint256 _fee = maxBid.mul(fee).div(100); // Calculate the fee
-            emit FundsWithdrawn(creator, maxBid - _fee); // Emit a withdraw funds event
-            payable(creator).transfer(maxBid - _fee); // Transfers funds to the creator
+            uint256 _payout = maxBid.sub(_fee); // Calculate the payout
+            if (royaltyToPay > 0) {
+                // If there is a royalty receiver
+                _payout = _payout.sub(royaltyToPay); // Add the royalty to the payout
+                emit FundsWithdrawn(creator, _payout); // Emit a withdraw funds event
+                payable(creator).transfer(_payout); // Transfers funds to the creator
+                payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
+                payable(royaltyReceiver).transfer(royaltyToPay); // Transfer the royalty to the royalty receiver
+            } else {
+                emit FundsWithdrawn(creator, _payout); // Emit a withdraw funds event
+                payable(creator).transfer(_payout); // Transfers funds to the creator
+                payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
+            }
         }
         notifyStateChange();
         return true;
@@ -232,20 +251,6 @@ contract Auction is ReentrancyGuard {
         AuctionManager(manager).auctionStateChanged(state);
     }
 
-    // can't transfer fee at the same time as the auction funds to creator
-    // allow the manager to transfer the fee
-    function transferFee(address _to) external payable returns (bool _success) {
-        require(msg.sender == manager, "Manager only"); // Only the manager can transfer the fee
-        // requrie the auction isCancelled, auctionSold, or isDirectBuy
-        require(
-            getAuctionState() == AuctionState.CANCELLED ||
-                getAuctionState() == AuctionState.AUCTION_BUY ||
-                getAuctionState() == AuctionState.DIRECT_BUY,
-            "Auction must be cancelled, sold, or direct buy"
-        );
-        payable(_to).transfer(address(this).balance); // Transfer the fee to the address
-        return true;
-    }
 
     event loweredReserve(uint256 indexed _reserve); // Event for lowering the reserve
     event NewBid(address indexed bidder, uint256 indexed bid); // A new bid was placed

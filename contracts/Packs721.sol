@@ -126,7 +126,7 @@ contract Packs721 is ERC721, Ownable, ReentrancyGuard {
     // withdraw all tokens from the contract to the owner
     function withdraw() external onlyOwner nonReentrant {
         require(address(this).balance > 100 wei, "Not enough Avax to withdraw");
-        uint256 fee = (address(this).balance * 2) / 100;
+        uint256 fee = (address(this).balance * 200) / 10000; // 2% fee
         uint256 profit = address(this).balance - fee;
         emit Withdrawal(feeCollector, fee, msg.sender, profit);
         payable(feeCollector).transfer(fee);

@@ -24,9 +24,8 @@ contract AuctionManager is AccessControl, ReentrancyGuard {
     bytes32 public constant AUCTION_ADDRESS = keccak256("AUCTION_ADDRESS");
 
     // constructor
-    constructor(address _caller) {
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        caller = _caller;
     }
 
     function createAuction(
@@ -115,14 +114,14 @@ contract AuctionManager is AccessControl, ReentrancyGuard {
     }
 
     // withdraw funds by admin
-    function withdrawFunds(uint256 _amount, address _account)
+    function withdrawFunds()
         external
         nonReentrant
     {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender)); // require that the sender has the admin role
-        require(_amount <= address(this).balance, "Contract balance too low"); // the amount must be greater than the balance
+        uint256 _amount = address(this).balance;
         emit managerFundsWithdrawn(_amount); // emit the event
-        payable(_account).transfer(_amount); // transfer the funds to the given address
+        payable(msg.sender).transfer(_amount); // transfer the funds to the given address
     }
 
     // auction state change
@@ -147,28 +146,7 @@ contract AuctionManager is AccessControl, ReentrancyGuard {
         _revokeRole(AUCTION_ADDRESS, _auction); // revoke the auction role
     }
 
-    // change caller wallet
-    function changeCaller(address _newCaller) external {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "You are not an admin"
-        ); // only the admin can change the caller
-        emit callerChanged(_newCaller); // emit the event
-        // change caller
-        caller = _newCaller; // change the caller
-    }
 
-    // remove auction funds if completed
-    function transferAuctionFees(address _to, address _auction) external {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || msg.sender == caller,
-            "You are not an admin or the caller"
-        ); // only the admin or the caller can transfer the auction fees
-        require(
-            Auction(_auction).transferFee(_to),
-            "Auction failed to transfer funds"
-        ); // require that the auction transfer the funds
-    }
 
     // events
     event AuctionState(address indexed auction, uint256 indexed state);
@@ -176,5 +154,4 @@ contract AuctionManager is AccessControl, ReentrancyGuard {
     event tokenAdded(address indexed collection, uint256 indexed tokenId); // Event for when a token is added
     event auctionCreated(address indexed auction); // Event for when an auction is created
     event managerFundsWithdrawn(uint256 indexed amount); // Event for when funds are withdrawn
-    event callerChanged(address indexed _newCaller); // Event for when the caller is changed
 }
