@@ -14,11 +14,7 @@ describe("Entity721a contract", function () {
         // Get the ContractFactory and Signers here.
         StringLibrary = await ethers.getContractFactory("StringCheck");
         stringLibrary = await StringLibrary.deploy();
-        Ent721a = await ethers.getContractFactory("Entity721a", {
-            libraries: {
-                StringCheck: stringLibrary.address,
-            },
-        });
+        Ent721a = await ethers.getContractFactory("Entity721a");
         [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
         ent721a = await Ent721a.deploy();
         await ent721a.deployed();
@@ -63,7 +59,7 @@ describe("Entity721a contract", function () {
         it("Should revert if the token uri has already been set", async function () {
             await ent721a.connect(addr1).mint()
                 await ent721a.connect(addr1).setTokenURI("https://replaced.png", 0)
-                await expect(ent721a.connect(addr1).setTokenURI("https://2ndreplacement.png", 0)).to.be.revertedWith("You can only set the URI for a token once");
+                await expect(ent721a.connect(addr1).setTokenURI("https://2ndreplacement.png", 0)).to.be.revertedWith("Token has already been revealed");
             }
         );
         it("Should revert if the token does not exist", async function () {

@@ -1,38 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-library StringCheck {
-    /// @dev Does a byte-by-byte lexicographical comparison of two strings.
-    /// return a negative number if `_a` is smaller, zero if they are equal
-    /// and a positive numbe if `_b` is smaller.
-    function _compare(string memory _a, string memory _b)
-        internal
-        pure
-        returns (int256)
-    {
-        bytes memory a = bytes(_a);
-        bytes memory b = bytes(_b);
-        uint256 minLength = a.length;
-        if (b.length < minLength) minLength = b.length;
-        //@todo unroll the loop into increments of 32 and do full 32 byte comparisons
-        for (uint256 i = 0; i < minLength; i++)
-            if (a[i] < b[i]) return -1;
-            else if (a[i] > b[i]) return 1;
-        if (a.length < b.length) return -1;
-        else if (a.length > b.length) return 1;
-        else return 0;
-    }
-
-    /// @dev Compares two strings and returns true iff they are equal.
-    function equal(string memory _a, string memory _b)
-        public
-        pure
-        returns (bool)
-    {
-        return _compare(_a, _b) == 0;
-    }
-}
-
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -43,7 +11,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  * @dev Enter the placeholder URI for the placeholder image during contract deployment
  * @author BradMyrick @kodr_eth
  */
-pragma solidity ^0.8.7;
 
 contract Entity721a is ERC721A, Ownable, ReentrancyGuard {
     bool public mintLive;
@@ -51,7 +18,7 @@ contract Entity721a is ERC721A, Ownable, ReentrancyGuard {
 
     /// @dev token uri mapping
     mapping(uint256 => string) public tokenURIs;
-
+    mapping(uint256 => bool) public tokenRevealed;
     modifier onlyTokenOwner(uint256 _tokenId) {
         require(
             ownerOf(_tokenId) == msg.sender,
@@ -79,11 +46,9 @@ contract Entity721a is ERC721A, Ownable, ReentrancyGuard {
         onlyTokenOwner(_tokenId)
         nonReentrant
     {
-        require(
-            StringCheck.equal(tokenURIs[_tokenId], placeHolderURI),
-            "You can only set the URI for a token once"
-        );
+        require(!tokenRevealed[_tokenId], "Token has already been revealed");
         tokenURIs[_tokenId] = _URI;
+        tokenRevealed[_tokenId] = true;
     }
 
     /// @dev override the tokenURI function in ERC721A

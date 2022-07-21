@@ -17,11 +17,7 @@ describe("PaymentReceived contract", function () {
     [owner, addr1, addr2, addr3, multiSig, ...addrs] = await ethers.getSigners();
     StringLibrary = await ethers.getContractFactory("StringCheck");
     stringLibrary = await StringLibrary.deploy();
-    NftContract = await ethers.getContractFactory("Entity721a", {
-        libraries: {
-            StringCheck: stringLibrary.address,
-        },
-    });
+    NftContract = await ethers.getContractFactory("Entity721a");
     nftContract = await NftContract.connect(addr1).deploy();
     Erc20 = await ethers.getContractFactory("Recharge");
     erc20 = await Erc20.connect(owner).deploy(addr1.address, addr2.address, addr3.address);

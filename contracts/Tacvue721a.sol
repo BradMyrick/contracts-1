@@ -17,8 +17,9 @@ pragma solidity ^0.8.7;
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
-contract Tacvue721a is ERC721A, Ownable, ReentrancyGuard {
+contract Tacvue721a is ERC721A, ERC2981, Ownable, ReentrancyGuard {
     uint256 public MAX_MINTS;
     uint256 public MAX_SUPPLY;
     uint256 public mintPrice;
@@ -43,6 +44,7 @@ contract Tacvue721a is ERC721A, Ownable, ReentrancyGuard {
     constructor(
         string memory _collectionName,
         string memory _ticker,
+        uint96 _royaltyPoints,
         uint256 _maxMints,
         uint256 _maxSupply,
         uint256 _mintPrice,
@@ -51,7 +53,7 @@ contract Tacvue721a is ERC721A, Ownable, ReentrancyGuard {
         address _feeCollector
     ) ERC721A(_collectionName, _ticker) {
         require(_feeCollector != address(0), "Cannot be 0 address");
-
+        _setDefaultRoyalty(msg.sender, _royaltyPoints);
         MAX_MINTS = _maxMints;
         MAX_SUPPLY = _maxSupply;
         mintPrice = _mintPrice;
@@ -80,6 +82,24 @@ contract Tacvue721a is ERC721A, Ownable, ReentrancyGuard {
             );
             _safeMint(msg.sender, quantity);
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721A, ERC2981)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @dev See {ERC721-_burn}. This override additionally clears the royalty information for the token.
+     */
+    function _burn(uint256 tokenId) internal virtual override {
+        super._burn(tokenId);
+        _resetTokenRoyalty(tokenId);
     }
 
     // Bulk WhiteListing add up to 100 addresses at a time to the whitelist
