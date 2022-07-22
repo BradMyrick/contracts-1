@@ -31,4 +31,33 @@ describe("Blotter contract", function () {
         });
     });
 
+    describe("Promote Tweet", function () {
+        it("Should promote a tweet", async function () {
+            // authorize blotter to spend the tokens
+            await erc20.connect(addr1).approve(blotter.address, parseEther("2"));
+            await blotter.connect(addr1).promoteTweet("https://twitter.com/faketweet");
+            await blotter.connect(addr1).promoteTweet("https://twitter.com/realtweet");
+            links = await blotter.getTwitterLinks(addr1.address);
+            expect(links[1]).to.equal("https://twitter.com/realtweet");
+        });
+        it("Should return the correct cost", async function () {
+            expect(await blotter.getCost()).to.equal(parseEther("1"));
+        });
+        it("Should kill the promotion if owner", async function () {
+            await erc20.connect(addr1).approve(blotter.address, parseEther("2"));
+            await blotter.connect(addr1).promoteTweet("https://twitter.com/deleteme");
+            await blotter.connect(owner).killPromotion(addr1.address);
+            links = await blotter.getTwitterLinks(addr1.address)
+            expect(links[0]).to.equal(false);
+        });
+        it("Should NOT kill the promotion if not owner", async function () {
+            await erc20.connect(addr1).approve(blotter.address, parseEther("2"));
+            await blotter.connect(addr1).promoteTweet("https://twitter.com/deleteme");
+            tx = blotter.connect(addr2).killPromotion(addr1.address);
+            links = await blotter.getTwitterLinks(addr1.address)
+            expect(links[0]).to.equal(true);
+        }
+        );
+    });
+
 });
