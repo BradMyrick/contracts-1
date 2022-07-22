@@ -134,6 +134,15 @@ describe("Marketplace contracts", function () {
                 console.log(`Event ${event.event} with args ${event.args}`);
             }
             expect(await auctionContract.maxBidder()).to.equal(addr1.address);
+            await network.provider.send("evm_setNextBlockTimestamp", [startTime+1000]);
+            tx3 = await auctionContract.connect(addr1).endAuction();
+            const receipt3 = await tx3.wait();
+            for (const event of receipt3.events) {
+                console.log(`Event ${event.event} with args ${event.args}`);
+            }
+            expect(await nftContract.balanceOf(addr1.address)).to.equal(1);
+
+
         }
         );
 

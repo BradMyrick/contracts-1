@@ -29,5 +29,18 @@ describe("OneByOne contract", function () {
         );
     }
     );
+    describe("Mint function", function () {
+        it("Should mint a new token", async function () {
+            await obO721.connect(owner).mint(_baseURI);
+            expect(await obO721.balanceOf(owner.address)).to.equal(1);
+            expect(await obO721.totkenURI(1)).to.equal(_baseURI);
+        }
+        );
+        it("Should revert if no URL is given", async function () {
+            await expect(obO721.connect(addr1).mint()).to.be.reverted;
+        }
+        );
+    }
+    );
 }
 );
