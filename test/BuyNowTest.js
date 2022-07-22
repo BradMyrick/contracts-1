@@ -9,7 +9,6 @@ const {
 } = require("web3");
 describe("Marketplace contracts", function () {
 
-    let _buyNow = true
     let _directBuyPrice = ethers.utils.parseEther("1")
     let _startPrice = ethers.utils.parseEther(".01");
     let _tokenId = 0;
@@ -25,7 +24,7 @@ describe("Marketplace contracts", function () {
 
 
 
-
+    
     beforeEach(async function () {
         [owner, creator, feeCollector, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
         await network.provider.send("evm_setNextBlockTimestamp", [startTime])
@@ -56,9 +55,9 @@ describe("Marketplace contracts", function () {
             expect(await nftContract.balanceOf(creator.address)).to.equal(1);
             await nftContract.connect(creator).approve(managerContract.address, 0);
             // auctionAddress should equal the return value of the createAuction function
-            auctionContract = await managerContract.connect(creator).createAuction(_endTime, true, _directBuyPrice, _startPrice, nftContract.address, _tokenId);
-            const aReceipt = await auctionContract.wait();
-            for (const event of aReceipt.events) {
+            tx = await managerContract.connect(creator).createAuction(_endTime, true, _directBuyPrice, _startPrice, nftContract.address, _tokenId);
+            const receipt = await tx.wait();
+            for (const event of receipt.events) {
                 console.log(`Event ${event.event} with args ${event.args}`);
             }
             expect(await nftContract.balanceOf(creator.address)).to.equal(0);
@@ -66,7 +65,16 @@ describe("Marketplace contracts", function () {
             console.log(auctionAddress);
             // auctionAddress should own the nft now
             expect(await nftContract.ownerOf(_tokenId)).to.equal(auctionAddress);
-  
+            AuctionContract = await ethers.getContractFactory("Auction");
+            auctionContract = await AuctionContract.attach(auctionAddress);
+            // buy the nft
+            tx2 = await auctionContract.connect(addr1).placeBid({value: _directBuyPrice});
+            const receipt2 = await tx2.wait();
+            for (const event of receipt2.events) {
+                console.log(`Event ${event.event} with args ${event.args}`);
+            }
+            expect(await nftContract.balanceOf(addr1.address)).to.equal(1);
+
         });
 
     });

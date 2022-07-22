@@ -28,7 +28,6 @@ contract Auction is ReentrancyGuard {
     bool public auctionSold; // True if the auction has been sold via auction
     address public constant feeCollector =
         0x22F413F34E2A17B2a5a835d62A087577B7bF3DAc; // The address of the fee collector
-
     // 2% fee for auction manager
     uint256 public constant fee = 200;
     IERC721 _nft; // The NFT token
@@ -121,7 +120,6 @@ contract Auction is ReentrancyGuard {
     // Place a bid on the auction
     function placeBid() external payable nonReentrant returns (bool) {
         // Check if the auction still owns the token
-  
         require(msg.sender != creator, "Can't bid on your own item"); // The auction creator can not place a bid
         require(getAuctionState() == AuctionState.OPEN, "Auction has closed"); // The auction must be open
         require(
@@ -157,10 +155,13 @@ contract Auction is ReentrancyGuard {
                     payable(creator).transfer(_payout); // Transfer the payout amount to the creator
                     payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
                     payable(royaltyReceiver).transfer(royaltyToPay); // Transfer the royalty to the royalty receiver
+                    _nft.transferFrom(address(this), maxBidder, tokenId); // Transfer the token to the highest bidder
+
+                } else {
+                    payable(creator).transfer(_payout); // Transfers funds to the creator
+                    payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
+                    _nft.transferFrom(address(this), maxBidder, tokenId); // Transfer the token to the highest bidder
                 }
-                payable(creator).transfer(_payout); // Transfers funds to the creator
-                payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
-                _nft.transferFrom(address(this), maxBidder, tokenId); // Transfer the token to the highest bidder
             } else {
                 reserveMet = true;
             } // The reserve price has been met.
