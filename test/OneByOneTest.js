@@ -33,13 +33,18 @@ describe("OneByOne contract", function () {
         it("Should mint a new token", async function () {
             await obO721.connect(owner).mint(_baseURI);
             expect(await obO721.balanceOf(owner.address)).to.equal(1);
-            expect(await obO721.totkenURI(1)).to.equal(_baseURI);
+            expect(await obO721.tokenURI(1)).to.equal(_baseURI);
         }
         );
         it("Should revert if no URL is given", async function () {
             await expect(obO721.connect(addr1).mint()).to.be.reverted;
         }
         );
+        it("Should revert if not token doesn't exist", async function () {
+            await expect(obO721.tokenURI(1)).to.be.reverted;
+        }
+        );
+
     }
     );
 }

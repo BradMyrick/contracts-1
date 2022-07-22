@@ -156,7 +156,6 @@ contract Auction is ReentrancyGuard {
                     payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
                     payable(royaltyReceiver).transfer(royaltyToPay); // Transfer the royalty to the royalty receiver
                     _nft.transferFrom(address(this), maxBidder, tokenId); // Transfer the token to the highest bidder
-
                 } else {
                     payable(creator).transfer(_payout); // Transfers funds to the creator
                     payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
@@ -228,11 +227,15 @@ contract Auction is ReentrancyGuard {
                 // If there is a royalty receiver
                 _payout = _payout.sub(royaltyToPay); // Add the royalty to the payout
                 emit FundsWithdrawn(creator, _payout); // Emit a withdraw funds event
+                emit FeeWithdrawn(feeCollector, _fee); // Emit a withdraw fee event
+                emit RoyaltyWithdrawn(royaltyReceiver, royaltyToPay); // Emit a withdraw royalty event
                 payable(creator).transfer(_payout); // Transfers funds to the creator
                 payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
                 payable(royaltyReceiver).transfer(royaltyToPay); // Transfer the royalty to the royalty receiver
             } else {
                 emit FundsWithdrawn(creator, _payout); // Emit a withdraw funds event
+                emit FeeWithdrawn(feeCollector, _fee); // Emit a withdraw fee event
+
                 payable(creator).transfer(_payout); // Transfers funds to the creator
                 payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
             }
@@ -267,6 +270,8 @@ contract Auction is ReentrancyGuard {
         emit AuctionStateChanged(address(this), state);
         AuctionManager(manager).auctionStateChanged(state);
     }
+    event FeeWithdrawn(address indexed feeCollector, uint256 indexed amount);
+    event RoyaltyWithdrawn(address indexed creator, uint256 indexed amount);
     event AuctionStateChanged(address auction, uint256 state);
     event loweredReserve(uint256 indexed _reserve); // Event for lowering the reserve
     event NewBid(address indexed bidder, uint256 indexed bid); // A new bid was placed
