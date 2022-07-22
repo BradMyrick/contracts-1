@@ -10,8 +10,6 @@ const {
 describe("PaymentReceived contract", function () {
   let PaymentReceived;
   let paymentReceived;
-  let StringLibrary;
-  let stringLibrary;
   let Erc20;
   let erc20;
   let NftContract;
@@ -21,8 +19,6 @@ describe("PaymentReceived contract", function () {
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
     [owner, addr1, addr2, addr3, multiSig, ...addrs] = await ethers.getSigners();
-    StringLibrary = await ethers.getContractFactory("StringCheck");
-    stringLibrary = await StringLibrary.deploy();
     NftContract = await ethers.getContractFactory("Entity721a");
     nftContract = await NftContract.connect(addr1).deploy();
     Erc20 = await ethers.getContractFactory("Recharge");

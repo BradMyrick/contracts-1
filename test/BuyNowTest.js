@@ -22,7 +22,7 @@ describe("Marketplace contracts", function () {
     let mintPrice = ethers.utils.parseEther("1");
     let wlPrice = ethers.utils.parseEther("0.5");
     let placeholderUri = "https://tacvue.com";
-    let _endTime = 800;
+    
 
 
 
@@ -45,6 +45,7 @@ describe("Marketplace contracts", function () {
     describe("Auction", function () {
         it("Should buy the NFT", async function () {
             // mint an nft and sell it
+            let _endTime = 800;
             NftContract = await ethers.getContractFactory("Tacvue721a");
             nftContract = await NftContract.connect(owner).deploy(name, ticker, royalty, maxMints, maxSupply, mintPrice, wlPrice, placeholderUri, feeCollector.address);
             await nftContract.deployed();
@@ -55,13 +56,49 @@ describe("Marketplace contracts", function () {
             expect(await nftContract.balanceOf(creator.address)).to.equal(1);
             await nftContract.connect(creator).approve(managerContract.address, 0);
             
-            AuctionContract = await managerContract.connect(creator).createAuction(_endTime, _buyNow, _directBuyPrice, _startPrice, nftContract.address, _tokenId);
+            AuctionContract = await managerContract.connect(creator).createAuction(_endTime, true, _directBuyPrice, _startPrice, nftContract.address, _tokenId);
+            const aReceipt = await AuctionContract.wait()
+            for (const event of aReceipt.events) {
+                console.log(`Event ${event.event} with args ${event.args}`);
+            }
+            auctionAddress = ethers.utils.getContractAddress(AuctionContract);
+            auctionContract = await ethers.getContractAt("Auction", auctionAddress);
+            console.log(auctionAddress);
+            console.log(auctionContract.address);
+            let bid = ethers.utils.parseEther("1");
+            const tx = await auctionContract.connect(addr2).placeBid({
+                value: bid
+            });
+            // log all emitted events
+            const receipt = await tx.wait()
+            for (const event of receipt.events) {
+                console.log(`Event ${event.event} with args ${event.args}`);
+            }
+        });
+        it("Should bid on the NFT", async function () {
+            // mint an nft and sell it
+            let _endTime = 800;
+
+            NftContract = await ethers.getContractFactory("Tacvue721a");
+            nftContract = await NftContract.connect(owner).deploy(name, ticker, royalty, maxMints, maxSupply, mintPrice, wlPrice, placeholderUri, feeCollector.address);
+            await nftContract.deployed();
+            await nftContract.connect(owner).saleActiveSwitch();
+            await nftContract.connect(creator).mint(1, {
+                value: ethers.utils.parseEther("1")
+            });
+            expect(await nftContract.balanceOf(creator.address)).to.equal(1);
+            await nftContract.connect(creator).approve(managerContract.address, 0);
+            
+            AuctionContract = await managerContract.connect(creator).createAuction(_endTime, false, _directBuyPrice, _startPrice, nftContract.address, _tokenId);
             auctionAddress = ethers.utils.getContractAddress(AuctionContract);
             auctionContract = await ethers.getContractAt("Auction", auctionAddress);
             let bid = ethers.utils.parseEther("1");
-            await auctionContract.placeBid({
+            await auctionContract.connect(addr2).placeBid({
                 value: bid
             });
+            expect(await nftContract.balanceOf(addr2.address)).to.equal(0);
+
+
         });
     });
 });

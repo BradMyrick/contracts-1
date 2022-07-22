@@ -7,8 +7,6 @@ const {
 describe("Entity721a contract", function () {
     let Ent721a;
     let ent721a;
-    let StringLibrary;
-    let stringLibrary;
     let owner;
     let addr1;
     let addr2;
@@ -16,8 +14,6 @@ describe("Entity721a contract", function () {
 
     beforeEach(async function () {
         // Get the ContractFactory and Signers here.
-        StringLibrary = await ethers.getContractFactory("StringCheck");
-        stringLibrary = await StringLibrary.deploy();
         Ent721a = await ethers.getContractFactory("Entity721a");
         [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
         ent721a = await Ent721a.deploy();
