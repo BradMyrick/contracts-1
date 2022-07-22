@@ -264,9 +264,10 @@ contract Auction is ReentrancyGuard {
 
     function notifyStateChange() internal {
         uint256 state = uint256(getAuctionState());
+        emit AuctionStateChanged(address(this), state);
         AuctionManager(manager).auctionStateChanged(state);
     }
-
+    event AuctionStateChanged(address auction, uint256 state);
     event loweredReserve(uint256 indexed _reserve); // Event for lowering the reserve
     event NewBid(address indexed bidder, uint256 indexed bid); // A new bid was placed
     event NFTWithdrawn(address indexed withdrawer); // The auction winner withdrew the token

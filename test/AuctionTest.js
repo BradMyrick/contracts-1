@@ -42,7 +42,7 @@ describe("Marketplace contracts", function () {
     });
 
     describe("Auction", function () {
-        it("create auction", async function () {
+        it("create auction and buy nft", async function () {
             let _endTime = 800;
             // mint an nft
             NftContract = await ethers.getContractFactory("Tacvue721a");
@@ -89,6 +89,54 @@ describe("Marketplace contracts", function () {
             expect(await nftContract.balanceOf(addr1.address)).to.equal(1);
 
         });
+        it("create auction and bid on an nft then end the auction", async function () {
+            let _endTime = 800;
+            // mint an nft
+            NftContract = await ethers.getContractFactory("Tacvue721a");
+            nftContract = await NftContract.connect(owner).deploy(name, ticker, royalty, maxMints, maxSupply, mintPrice, wlPrice, placeholderUri, feeCollector.address);
+            await nftContract.deployed();
+            await nftContract.connect(owner).saleActiveSwitch();
+            await nftContract.connect(creator).mint(1, {
+                value: ethers.utils.parseEther("1")
+            });
+            expect(await nftContract.balanceOf(creator.address)).to.equal(1);
+            await nftContract.connect(creator).approve(managerContract.address, 0);
+            // create an auction
+            tx = await managerContract.connect(creator).createAuction(_endTime, false, startDBprice, _startPrice, nftContract.address, _tokenId);
+            const receipt = await tx.wait();
+            for (const event of receipt.events) {
+                console.log(`Event ${event.event} with args ${event.args}`);
+            }
+            expect(await nftContract.balanceOf(creator.address)).to.equal(0);
+            // auctionAddress should own the nft now
+            let auctionAddress = await managerContract.getOneNFT(nftContract.address, _tokenId);
+            console.log(auctionAddress);
+            expect(await nftContract.ownerOf(_tokenId)).to.equal(auctionAddress);
+            AuctionContract = await ethers.getContractFactory("Auction");
+            auctionContract = await AuctionContract.attach(auctionAddress);
+            // lower reserve price
+            await auctionContract.connect(creator).lowerReserve(1000000000000000);
+            // get live auctions
+            aucArray = await managerContract.getAuctions();
+            expect(aucArray[0]).to.equal(auctionAddress);
+            // get live auction for NFT address
+            nftArray = await managerContract.collectionGetAllForSale(nftContract.address);
+            expect(nftArray[0]).to.equal(auctionAddress);
+            // get auction info
+            info = await managerContract.getAuctionInfo(auctionContract.address);
+            expect(info._nftAddress).to.equal(nftContract.address);
+            // buy the nft
+            tx2 = await auctionContract.connect(addr1).placeBid({
+                value: 1000000000000000
+            });
+            const receipt2 = await tx2.wait();
+            for (const event of receipt2.events) {
+                console.log(`Event ${event.event} with args ${event.args}`);
+            }
+            expect(await auctionContract.maxBidder()).to.equal(addr1.address);
+        }
+        );
+
 
     });
 });
