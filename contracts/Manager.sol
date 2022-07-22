@@ -52,14 +52,14 @@ contract AuctionManager is AccessControl, ReentrancyGuard {
             _nftAddress,
             _tokenId
         ); // create the auction
-        auctions.add(address(auction)); // add the auction to the list of auctions
+        require(auctions.add(address(auction)), "Auction not added"); // add the auction to the list of auctions
         _grantRole(AUCTION_ADDRESS, address(auction)); // grant the auction role to the auction
         if (!collectionPresent[_nftAddress]) {
             // if the collection is not present
             emit collectionAdded(_nftAddress);
             collectionPresent[_nftAddress] = true;
         }
-        NFTcollections[_nftAddress].collection.add(address(auction));
+        require(NFTcollections[_nftAddress].collection.add(address(auction)), "Auction not added to collection"); // add the auction to the collection
         bool _added = NFTcollections[_nftAddress].tokenIDs.add(_tokenId);
         if (_added) {
             emit tokenAdded(_nftAddress, _tokenId);
@@ -126,10 +126,10 @@ contract AuctionManager is AccessControl, ReentrancyGuard {
 
     // remove finished auctions from the mapping
     function _removeAuction(address _auction) internal {
-        auctions.remove(_auction); // remove the auction from the list
-        NFTcollections[Auction(_auction).nftAddress()].collection.remove(
+        require(auctions.remove(_auction), "Auction does not exist"); // remove the auction from the list of auctions
+        require(NFTcollections[Auction(_auction).nftAddress()].collection.remove(
             _auction
-        ); // remove the auction from the collection
+        ), "Auction does not exist"); // remove the auction from the collection
         NFTcollections[Auction(_auction).nftAddress()].auctionIndex[
             Auction(_auction).tokenId()
         ] = address(0); // remove the auction from the auction index

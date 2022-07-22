@@ -2,7 +2,8 @@ const {
     expect
 } = require("chai");
 const {
-    ethers
+    ethers,
+    network
 } = require("hardhat");
 const {
     parseEther
@@ -80,6 +81,25 @@ describe("RxgVending contract", function () {
             await (expect(rxgVending.connect(addr1).buyRxg({
                 value: parseEther("1")
             })).to.be.reverted);
+        });
+    });
+    describe("Withdraw", function () {
+        it("Should withdraw if owner", async function () {
+            await rxgToken.connect(addr1).approve(rxgVending.address, parseEther("1000"));
+            await rxgVending.connect(addr1).addRxg(parseEther("1000"));
+            expect(await rxgToken.balanceOf(rxgVending.address)).to.equal(parseEther("1000"));
+            await rxgVending.connect(buyer).buyRxg({
+                value: parseEther("1")
+            });
+            // get ether balance of rxgVending contract
+            tx = await rxgVending.connect(owner).withdraw();
+            results = await tx.wait();
+            for (const event of results.events) {
+                console.log(`Event ${event.event} with args ${event.args}`);
+            }
+        });
+        it("Should not withdraw if not owner", async function () {
+            await (expect(rxgVending.connect(addr1).withdraw()).to.be.reverted);
         });
     });
 

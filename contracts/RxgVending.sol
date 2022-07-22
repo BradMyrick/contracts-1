@@ -41,14 +41,11 @@ contract RxgVending is ReentrancyGuard {
     }
 
     /// @notice withdraws AVAX from the contract
-    function withdraw(uint256 _amount) external onlyOwner nonReentrant {
-        uint256 avaxSupply = address(this).balance;
-        require(
-            avaxSupply >= _amount,
-            "Not enough Avax in contract to withdraw"
-        );
-        emit Withdrawn(_amount, msg.sender);
-        payable(owner).transfer(_amount);
+    function withdraw() external onlyOwner nonReentrant {
+        uint256 amount = address(this).balance;
+        require(amount > 0, "No AVAX to withdraw");
+        emit Withdrawn(amount, msg.sender);
+        payable(owner).transfer(amount);
     }
 
     /// @notice change the pegged price of rxg token

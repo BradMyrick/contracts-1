@@ -76,10 +76,12 @@ contract Auction is ReentrancyGuard {
     ) {
         // zero check ints
         if (
+            _creator == address(0) ||
             _endTime == 0 ||
             _minIncrement == 0 ||
             _directBuyPrice == 0 ||
-            _startPrice == 0
+            _startPrice == 0 ||
+            _nftAddress == address(0)
         ) {
             revert("Zero value provided");
         }
@@ -143,12 +145,11 @@ contract Auction is ReentrancyGuard {
                 ).royaltyInfo(tokenId, maxBid);
                 // If the auction can be purchased directly
                 isDirectBuy = true; // The auction has ended
-                // notify the manager
-                notifyStateChange();
+
                 emit NFTWithdrawn(maxBidder); // Emit a withdraw token event
                 uint256 _fee = maxBid.mul(200).div(10000); // 2% fee
                 uint256 _payout = maxBid.sub(_fee); // The payout amount
-                if (royaltyToPay > 0) {
+                if (royaltyToPay != 0 && royaltyReceiver != address(0)) {
                     // If the auction has a royalty receiver
                     _payout = _payout.sub(royaltyToPay); // Subtract the royalty amount from the payout amount
                     emit FundsWithdrawn(creator, _payout); // Emit a withdraw funds event
@@ -164,6 +165,8 @@ contract Auction is ReentrancyGuard {
             } else {
                 reserveMet = true;
             } // The reserve price has been met.
+            // notify the manager
+            notifyStateChange();
         }
         if (lastHighestBid != 0) {
             // if there is a bid
@@ -204,6 +207,7 @@ contract Auction is ReentrancyGuard {
             getAuctionState() == AuctionState.ENDED,
             "Auction must be ended"
         ); // The auction must be ended
+
         if (!reserveMet) {
             // If the reserve has not been met
             isCancelled = true; // The auction has been cancelled
@@ -220,7 +224,6 @@ contract Auction is ReentrancyGuard {
                 nftAddress
             ).royaltyInfo(tokenId, maxBid);
             auctionSold = true; // The auction has been sold
-            _nft.transferFrom(address(this), maxBidder, tokenId); // Transfer the NFT token to the auction creator
             uint256 _fee = maxBid.mul(200).div(10000); // 2% fee
             uint256 _payout = maxBid.sub(_fee); // Calculate the payout
             if (royaltyToPay > 0) {
@@ -239,8 +242,10 @@ contract Auction is ReentrancyGuard {
                 payable(creator).transfer(_payout); // Transfers funds to the creator
                 payable(feeCollector).transfer(_fee); // Transfers the fee to the fee collector
             }
+            notifyStateChange();
+
+            _nft.transferFrom(address(this), maxBidder, tokenId); // Transfer the NFT token to the auction creator
         }
-        notifyStateChange();
         return true;
     }
 
@@ -270,6 +275,7 @@ contract Auction is ReentrancyGuard {
         emit AuctionStateChanged(address(this), state);
         AuctionManager(manager).auctionStateChanged(state);
     }
+
     event FeeWithdrawn(address indexed feeCollector, uint256 indexed amount);
     event RoyaltyWithdrawn(address indexed creator, uint256 indexed amount);
     event AuctionStateChanged(address auction, uint256 state);
