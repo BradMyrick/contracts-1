@@ -14,8 +14,8 @@ contract OneByOne721 is ERC721Enumerable, ERC721Burnable, Ownable {
     mapping(uint256 => string) private _tokenURIs;
 
     // constructor
-    constructor(string memory _name, string memory _ticker)
-        ERC721(_name, _ticker)
+    constructor(string memory _projectName, string memory _ticker)
+        ERC721(_projectName, _ticker)
     {}
 
     // functions

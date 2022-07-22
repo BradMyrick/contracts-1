@@ -94,7 +94,7 @@ describe("PaymentReceived contract", function () {
       await expect(owner.sendTransaction({
         to: paymentReceived.address,
         value: parseEther("1")
-      })).to.be.revertedWith("function selector was not recognized and there's no fallback nor receive function");
+      })).to.be.reverted;
     });
   });
 });

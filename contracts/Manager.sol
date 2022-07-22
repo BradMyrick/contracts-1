@@ -113,16 +113,6 @@ contract AuctionManager is AccessControl, ReentrancyGuard {
         return Auction(_addy).getInfo();
     }
 
-    // withdraw funds by admin
-    function withdrawFunds()
-        external
-        nonReentrant
-    {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender)); // require that the sender has the admin role
-        uint256 _amount = address(this).balance;
-        emit managerFundsWithdrawn(_amount); // emit the event
-        payable(msg.sender).transfer(_amount); // transfer the funds to the given address
-    }
 
     // auction state change
     function auctionStateChanged(uint256 _state) external {
