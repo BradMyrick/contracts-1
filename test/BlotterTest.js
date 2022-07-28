@@ -40,8 +40,11 @@ describe("Blotter contract", function () {
             links = await blotter.getTwitterLinks(addr1.address);
             expect(links[1]).to.equal("https://twitter.com/realtweet");
             allLinks = await blotter.getAllTweets();
+            allUsers = await blotter.getUsers();
             tweet= allLinks[0][1];
+            user = allUsers[0];
             expect(tweet).to.equal("https://twitter.com/realtweet");
+            expect(user).to.equal(addr1.address);
         });
         it("Should return the correct cost", async function () {
             expect(await blotter.getCost()).to.equal(parseEther("1"));

@@ -70,6 +70,7 @@ describe("Packs721 contract", function () {
             await packs721.connect(addr2).mint(6, {
                 value: ethers.utils.parseEther("1")
             });
+            expect(await packs721.tokenURI(5)).to.equal(_baseURI + "5");
             expect(await packs721.balanceOf(addr1.address)).to.equal(4);
             expect(await packs721.balanceOf(addr2.address)).to.equal(4);
         });
@@ -106,6 +107,17 @@ describe("Packs721 contract", function () {
             await packs721.connect(owner).bulkWhitelistAdd([addr1.address]);
             expect(await packs721.WhiteList(addr1.address)).to.equal(true);
         });
+        it("Should turn the whitelist off if it is active when the SaleActive switch is thrown", async function () {
+            await packs721.connect(owner).wlActiveSwitch();
+            expect (await packs721.wlActive()).to.equal(true);
+            await packs721.connect(owner).saleActiveSwitch();
+            expect (await packs721.wlActive()).to.equal(false);
+            expect (await packs721.saleActive()).to.equal(true);
+            await packs721.connect(owner).wlActiveSwitch();
+            expect (await packs721.wlActive()).to.equal(true);
+            expect (await packs721.saleActive()).to.equal(false);
+
+        });
     });
     describe("Withdraw", function () {
         it("Should withdraw the correct amount of tokens", async function () {
@@ -131,4 +143,10 @@ describe("Packs721 contract", function () {
             await expect(packs721.connect(owner).withdraw()).to.be.reverted;
         });
     });
+    describe("Get BaseURI", function () {
+        it("Should return the correct BaseURI", async function () {
+            expect(await packs721.baseURI()).to.equal(_baseURI);
+        });
+    }
+    );
 });
