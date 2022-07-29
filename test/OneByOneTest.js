@@ -47,5 +47,14 @@ describe("OneByOne contract", function () {
 
     }
     );
+    describe("Supports Interface", function () {
+        it("Should return true if the interface is supported", async function () {
+            expect(await obO721.supportsInterface("0x01ffc9a7")).to.equal(true);
+        });
+        it("Should return false if the interface is not supported", async function () {
+            expect(await obO721.supportsInterface("0x01ffc9a8")).to.equal(false);
+        });
+    }
+    );
 }
 );

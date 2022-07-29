@@ -102,6 +102,11 @@ contract Tacvue721a is ERC721A, ERC2981, Ownable, ReentrancyGuard {
         _resetTokenRoyalty(tokenId);
     }
 
+    function burn(uint256 tokenId) external {
+        require(msg.sender == ERC721A.ownerOf(tokenId), "Only token owner can burn");
+        _burn(tokenId);
+    }
+
     // Bulk WhiteListing add up to 100 addresses at a time to the whitelist
     function bulkWhitelistAdd(address[] calldata _addrs)
         external

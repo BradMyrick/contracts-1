@@ -68,6 +68,8 @@ describe("Tacvue721a contract", function () {
                 value: ethers.utils.parseEther("1")
             });
             expect(await tacvue721a.balanceOf(addr1.address)).to.equal(1);
+            expect(await tacvue721a.tokenURI(0)).to.equal(placeholderUri + "0");
+
         });
         it("Should revert if the minter is NOT WhiteListed and WL IS active", async function () {
             await tacvue721a.connect(owner).wlActiveSwitch();
@@ -99,6 +101,17 @@ describe("Tacvue721a contract", function () {
         });
         it("Should revert if the address is not in the WhiteList", async function () {
             await expect(tacvue721a.connect(owner).removeFromWhiteList(addr1.address)).to.be.reverted;
+        });
+        it("Should turn the whitelist off if it is active when the SaleActive switch is thrown", async function () {
+            await tacvue721a.connect(owner).wlActiveSwitch();
+            expect (await tacvue721a.wlActive()).to.equal(true);
+            await tacvue721a.connect(owner).saleActiveSwitch();
+            expect (await tacvue721a.wlActive()).to.equal(false);
+            expect (await tacvue721a.saleActive()).to.equal(true);
+            await tacvue721a.connect(owner).wlActiveSwitch();
+            expect (await tacvue721a.wlActive()).to.equal(true);
+            expect (await tacvue721a.saleActive()).to.equal(false);
+
         });
     });
 
@@ -160,5 +173,50 @@ describe("Tacvue721a contract", function () {
         });
 
     });
+    describe("Supports Interface", function () {
+        it("Should return true if the interface is supported", async function () {
+            expect(await tacvue721a.supportsInterface("0x01ffc9a7")).to.equal(true);
+        });
+        it("Should return false if the interface is not supported", async function () {
+            expect(await tacvue721a.supportsInterface("0x80ac58cd")).to.equal(false);
+        });
+    }
+    );
+    describe("Burn Tokens", function () {
+        it("Should burn the correct amount of tokens", async function () {
+            await tacvue721a.connect(owner).saleActiveSwitch();
+            await tacvue721a.connect(addr1).mint(1, {
+                value: ethers.utils.parseEther("1")
+            });
+            expect(await tacvue721a.balanceOf(addr1.address)).to.equal(1);
+            const tx = await tacvue721a.connect(addr1).burn(0);
+            const receipt = await tx.wait()
+            for (const event of receipt.events) {
+                console.log(`Event ${event.event} with args ${event.args}`);
+            }
+            expect(await tacvue721a.balanceOf(addr1.address)).to.equal(0);
+        });
+        it("Should revert if the address is not token owner", async function () {
+            await tacvue721a.connect(owner).saleActiveSwitch();
+            await tacvue721a.connect(addr1).mint(1, {
+                value: ethers.utils.parseEther("1")
+            });
+            await expect(tacvue721a.connect(addr1).burn(1)).to.be.reverted;
+        });
+        it("Should revert if the address has no tokens", async function () {
+            await expect(tacvue721a.connect(owner).burn(1)).to.be.reverted;
+        });
+    }
+    );
+    describe("Change Base URI", function () {
+        it("Should change the base URI", async function () {
+            await tacvue721a.connect(owner).setBaseURI("https://www.google.com");
+            expect(await tacvue721a.baseURI()).to.equal("https://www.google.com");
+        });
+        it("Should revert if the address is not owner", async function () {
+            await expect(tacvue721a.connect(addr1).setBaseURI("https://www.google.com")).to.be.reverted;
+        });
+    }
+    );
 
 });
