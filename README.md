@@ -1,6 +1,6 @@
-# Testing for Upgradeable Smart Contracts
+# Solidity Smart Contracts and Tests for TacVue
 
-This test set utilizes the OpenZeppelin `Upgradeable` contract standards to test if the contract is upgradeable and then deploys it.
+Contract suite with tests for tacvue.io
 
 tasks:
 
@@ -13,4 +13,3 @@ npx hardhat node
 node scripts/sample-script.js
 npx hardhat help
 ```
-TODO: add special dependencies for the project
