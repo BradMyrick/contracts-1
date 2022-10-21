@@ -10,52 +10,47 @@ pragma solidity ^0.8.7;
 
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-\import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract RadRabbitz is ERC721A, ERC2981, Ownable, ReentrancyGuard {
-    using EnumerableSet for EnumerableSet.UintSet;
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIdCounter;
 // variables
     address public AllFockedV1 = 0x4C2128E2B501C6FFF9b275f10C6bb6Ab8bF14E4e;
     address public AllFockedV2 = 0x54e2cd79b91D4C95853135dF6e265589c9781Dfe;
     address private Vault = 0x7A94B5f4C419975CfDce03f0FDf4b4C85acfcAb5;
     uint256 public constant MAX_SUPPLY = 5111;
-    EnumerableSet.UintSet private reserved = EnumerableSet.UintSet({
-        _values: [5092, 5071, 5102, 5111, 5000, 5001, 5002]
-    });
     struct V1Holder {
-        address holder;
+        address member;
         uint256 amount;
     }
-    V1Holder[] public v1Holders; 
-    struct TeamMember {
-        address member;
-        uint256 pfpID;
-    }
-    TeamMember[] private teamMembers = [
-        TeamMember(0xF964c6449AC4A2Fb571cE78F2229e6a936880686, 5092),
-        TeamMember(0x193a976e5b3ff43f08ced28Bfe6A27DD09d019b5, 5071),
-        TeamMember(0xa8F045c97BaB4AEF16B5e2d84DE16f581D1C7654, 5101),
-        TeamMember(0xf3ec3b5aa7fa0b8cc09d48ff7e7f1e102696a6e6, 5111), // need Salty addy
-        TeamMember(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 5100),
-        TeamMember(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 5102),
-        TeamMember(0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF, 5103),
+
+    address[] public team =
+    [   
+        address(0xF964c6449AC4A2Fb571cE78F2229e6a936880686),
+        address(0x193a976e5b3ff43f08ced28Bfe6A27DD09d019b5),
+        address(0xa8F045c97BaB4AEF16B5e2d84DE16f581D1C7654),
+        address(0x5d94A7740b4D76a488dC6AbE8839D033AD296f85),
+        address(0xA37108eeAcf3f363A44B82024bb529459F0119E2),
+        address(0xa8F045c97BaB4AEF16B5e2d84DE16f581D1C7654),
+        address(0xa8F045c97BaB4AEF16B5e2d84DE16f581D1C7654)
     ];
+
 // mappings
+    mapping (uint => V1Holder) private _v1Holders;
+    mapping (uint => uint) public V2TokenMap; // maps V1 token ID to V2 token ID
+    // team
+
+
+
 // events
     event Withdrawal(address indexed _addr, uint256 indexed _amount);
 // constructor
     constructor(address[] memory _addresses, uint256[] memory _amounts) ERC721A("Rad Rabbitz", "RABBIT") {
         require(_addresses.length == _amounts.length, "RadRabbitz: addresses and amounts must be the same length");
         for (uint256 i = 0; i < _addresses.length; i++) {
-            v1Holders.push(V1Holder(_addresses[i], _amounts[i]));
-        }
-        if (_tokenIdCounter.current() == 0) {
-            _tokenIdCounter.increment();
+            _v1Holders[i] = V1Holder(_addresses[i], _amounts[i]);
         }
         _setDefaultRoyalty(msg.sender, 750); // 7.5% royalty
         _mintout();
@@ -63,38 +58,18 @@ contract RadRabbitz is ERC721A, ERC2981, Ownable, ReentrancyGuard {
 // mint function
     // @dev mint function for the airdrop, sends the correct address the correct number of tokens
     function _mintout() internal {
-        // look at the previous holders of All Focked V2 mint each new token to the owner of the V2 token
-        // if the owner is the vault address, send the token to an owner of the V1 token    
-        for (uint256 i = _tokenId.current(); i < MAX_SUPPLY + 1; i++) {
-            address owner = ERC721(AllFockedV2).ownerOf(i);
-            if (owner == Vault) {
-                // if the token id is reserved, send it to the team member
-                if (EnumerableSet.contains(reserved, i)) {
-                    for (uint256 j = 0; j < teamMembers.length; j++) {
-                        if (teamMembers[j].pfpID == i) {
-                            _safeMint(teamMembers[j].member, tokenID);
-                            tokenID++;
-                        }
-                    }
-                } else {
-                    // if the token id is not reserved, send it to the V1 holder
-                    for (uint256 j = 0; j < v1Holders.length; j++) {
-                        if (v1Holders[j].amount > 0) {
-                            _safeMint(v1Holders[j].holder, tokenID);
-                            tokenID++;
-                            v1Holders[j].amount--;
-                        }
-                    }
-                }
-                for (uint256 j = 0; j < v1Holders.length; j++) {
-                    if (ERC721(AllFockedV1).ownerOf(v1Holders[j].amount) == v1Holders[j].holder) {
-                        owner = v1Holders[j].holder;
-                        break;
-                    }
-                }
-            }
-            _mint(owner, i);
-        }
+        // look at the previous holders of All Focked V2 and map each new token to the old token 
+        
+        
+            
+    }
+
+        /**
+     * @dev Returns the starting token ID.
+     * To change the starting token ID, please override this function.
+     */
+    function _startTokenId() internal view virtual override returns (uint256) {
+        return 1;
     }
 
 
